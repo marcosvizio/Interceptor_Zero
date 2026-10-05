@@ -33,7 +33,7 @@ Un tanque debe abrirse paso por una base enemiga y escapar. Todo está hecho con
 simples o assets de tanques/vehículos del Asset Store (nada humanoide).
 
 - **Player:** tanque con **controles de tanque clásico** (W avanza / S retrocede hacia donde mira el
-  tanque, A/D lo rotan sobre su eje vertical), torreta que apunta al mouse y disparo con click.
+  tanque, A/D lo rotan sobre su eje vertical), cañón fijo hacia adelante y disparo con click.
 - **Enemigos (mínimo 3 tipos):**
   - *Centinela:* torreta fija que dispara a intervalos.
   - *Embestidor:* persigue al jugador y hace daño por contacto.
@@ -105,11 +105,11 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [x] Importar assets (tanque, entorno) — revisar que no haya materiales rosados en URP
 - [x] Cámara top view (`CameraFollow.cs`, se queda la versión actual)
 - [x] Movimiento del tanque con `CharacterController` + gravedad y colisión con el suelo
-- [ ] Controles de tanque: A/D rotan el casco, W/S avanzan/retroceden según `transform.forward` (pasa al Día 2)
-- [ ] Ajustar el collider del Player
+- [x] Controles de tanque: A/D rotan el casco, W/S avanzan/retroceden según `transform.forward` (hecho el 2026-10-04)
+- [x] Ajustar el collider del Player
 
 ### Día 2 — Combate básico
-- [ ] Rotación de la torreta hacia el mouse
+- [x] ~~Rotación de la torreta hacia el mouse~~ — descartado (2026-10-04): el cañón apunta siempre hacia adelante
 - [x] Disparo (`BulletController`) — funciona; falta que algo implemente `IDamagable` para probar el daño
 - [ ] Daño
 - [ ] Jerarquía `Personaje` / `Enemy`: vida y muerte
@@ -143,11 +143,12 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [ ] Entregar
 
 ## Estado actual
-_Última actualización: 2026-10-04 (inicio del Día 2). Del Día 1 quedan pendientes los controles de tanque
-y el collider del Player; se hacen al principio del Día 2._
+_Última actualización: 2026-10-04 (Día 2). Día 1 completo._
 
 ### Hecho
-- `PlayerController`: movimiento WASD con `CharacterController` y gravedad; disparo con click (Fire1).
+- `PlayerController`: controles de tanque (A/D `transform.Rotate` en Y a `_rotationSpeed` °/s, W/S
+  `transform.forward * _moveInput * _speed`, ejes leídos con `GetAxis` por separado), `CharacterController`
+  con gravedad; disparo con click (Fire1). Commit `48c6072` en `dev`.
   `Shoot()` valida referencias, instancia con `_shootPoint.rotation * rotación del prefab`
   e ignora la colisión entre la bala y el `CharacterController` del Player.
 - `BulletController`: velocidad y daño desde `BulletData` (tipos 0 normal, 1 pesada, 2 explosiva);
@@ -161,28 +162,34 @@ y el collider del Player; se hacen al principio del Día 2._
 - Commit `380167d` "Día 1: movimiento, disparo y cámara top view", pusheado a `main`, `prod` y `dev`.
   Se trabaja en `dev`.
 - Decisión de controles (2026-10-04, reemplaza a twin-stick): **tanque clásico**. W/S avanzan/retroceden
-  hacia donde mira el tanque, A/D rotan el casco sobre el eje Y; la cámara no rota. El mouse apunta la
-  torreta (Día 2); click dispara. El mouse NO rota el tanque entero.
+  hacia donde mira el tanque, A/D rotan el casco sobre el eje Y; la cámara no rota.
+- Decisión del cañón (2026-10-04): **fijo hacia adelante**, sin torreta que siga al mouse. El mouse solo
+  dispara (click). Para apuntar se gira el tanque entero con A/D.
+- Collider del Player ajustado: `CharacterController` Height 0 / Radius 4 / Center 0 (con la escala 0.346
+  del root queda una esfera de radio ~1.4 centrada en el pivot).
 
 ### Próximo paso (empezar por acá)
-1. **Controles de tanque (los escribe Marcos, Claude solo guía y revisa):** en el `Update` del `PlayerController`,
-   - leer los ejes por separado (`turnInput` = Horizontal, `moveInput` = Vertical), **sin** `.normalized`
-     (con W+D normalizado el tanque avanzaría más lento al girar);
-   - rotar con `transform.Rotate(0f, turnInput * _rotationSpeed * Time.deltaTime, 0f)`;
-     `_rotationSpeed` pasa a ser grados/segundo (~120–180) y hay que cambiarlo en el **Inspector** del prefab,
-     porque el valor serializado pisa el default del código;
-   - mover con `transform.forward * moveInput * _speed`, sumarle la gravedad en `.y` y llamar a `Move`;
-   - rotar antes de mover, así el movimiento usa el `forward` de este frame;
-   - si W lo mueve de costado o hacia atrás, el modelo hijo no tiene el frente en +Z: rotar el hijo, no el root.
-2. **Collider del Player:** root con escala 1 y modelo como hijo; ajustar `Height`/`Radius`/`Center.y = Height/2`.
-3. Commit en `dev` de cada paso + `git push`; al cerrar el Día 1, merge a `prod` y `main` (ver "Git: ramas y flujo de trabajo").
-4. Seguir con el Día 2: torreta hacia el mouse.
+0. Commitear en `dev` el collider + CLAUDE.md, y pasar el Día 1 a `prod` → `main`.
+1. **Parte A — Jerarquía y daño (Marcos la escribe con guía):**
+   - `Personaje` (abstract, `MonoBehaviour`, implementa `IDamagable`): `_maxHealth`, `_currentHealth`,
+     `IsDead`, `TakeDamage` (resta, `Mathf.Max(0, ...)`, llama a `Die()` una sola vez), `protected abstract void Die()`.
+     `protected virtual void Awake()` inicializa la vida.
+   - `PlayerController : Personaje`: su `Awake` pasa a `protected override` + `base.Awake()`; `Die()` por
+     ahora `Debug.Log` (el respawn es Día 3).
+   - `Enemy : Personaje` (abstract): busca al Player por tag en `Awake`, `Die()` → `Destroy(gameObject)`,
+     `Update` llama a `protected abstract void Behave()` (cada tipo de enemigo la sobrescribe).
+   - `Embestidor : Enemy` con `Behave()` vacío; prefab monolítico (cubo/cápsula) con Rigidbody.
+   - Prueba: dispararle → la vida baja (Debug.Log) → muere a los N disparos.
+   - Tag "Player" aplicado en el **prefab** (hoy es solo override de la escena).
+2. **Parte B — Embestidor:** persecución con Rigidbody (`linearVelocity` en `FixedUpdate`, rotaciones X/Z
+   congeladas) y daño por contacto con cooldown (`OnCollisionStay` + `Time.time`).
 
 ### Pendientes menores
 - Convención de nombres en `BulletData`: los campos públicos usan `_` (`_speed`, `_damage`) y `bulletPrefab` no.
 - Carpeta `Prefab` vs `Prefabs` sugerida.
-- Para la torreta (Día 2): agrupar la base de la torreta y `Canons` bajo un objeto vacío `Turret` con el pivot
-  en el centro de giro; mouse → suelo con `Camera.ScreenPointToRay` + `Plane.Raycast`; rotar solo en Y.
+- Campo `_input` (Vector2) en `PlayerController` quedó sin uso después de los controles de tanque: borrarlo.
+- Los dos `Canon` del Player tienen `CapsuleCollider`: revisar si hacen falta (las balas nacen al lado y
+  `IgnoreCollision` solo ignora el `CharacterController`).
 
 ### Forma de trabajo acordada
 Marcos tiene que poder explicarle cada script al profesor: Claude **no escribe sistemas completos** aunque se le pida "necesito X". Guía con pasos, pistas y preguntas, revisa el código que escribe Marcos y solo aplica directamente los arreglos puntuales que se le pidan de forma explícita.

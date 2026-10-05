@@ -4,7 +4,7 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-01 21:33:23
- Last Modification Date: 2026-10-04 21:18:51
+ Last Modification Date: 2026-10-04 23:22:05
 
 */
 
@@ -12,7 +12,6 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private Vector2 _input;
     private float _turnInput;
     private float _moveInput;
     private Vector3 _moveDirection;
