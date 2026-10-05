@@ -1,10 +1,10 @@
 /*
 
- Author: Mrrcos Vizio
+ Author: Marcos Vizio
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-01 21:33:23
- Last Modification Date: 2026-10-02 03:00:24
+ Last Modification Date: 2026-10-04 21:18:51
 
 */
 
@@ -13,12 +13,14 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     private Vector2 _input;
+    private float _turnInput;
+    private float _moveInput;
     private Vector3 _moveDirection;
     private CharacterController _characterController;
     private float _verticalVelocity;
 
     [SerializeField] private float _speed = 5f;
-    [SerializeField] private float _rotationSpeed = 10f;
+    [SerializeField] private float _rotationSpeed = 120f;
     [SerializeField] private float _gravity = -9.81f;
     [SerializeField] private GameObject _bulletPrefab;
     [SerializeField] private Transform _shootPoint;
@@ -30,14 +32,17 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        _input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+        _turnInput = Input.GetAxis("Horizontal"); // Leemos las teclas por separado. Ej: A = -1, D = +1.
+        _moveInput = Input.GetAxis("Vertical"); // Ej: S = -1, W = +1
 
-        _moveDirection = new Vector3(_input.x, 0f, _input.y) * _speed;
+        transform.Rotate(0f, _turnInput * _rotationSpeed * Time.deltaTime, 0f); // Rotamos el tanque sobre el eje Y
 
-        // Gravedad
+        _moveDirection = transform.forward * _moveInput * _speed; // Para avanzar y retroceder el tanque con W y S
+
+        // Gravedad simulada
         if (_characterController.isGrounded && _verticalVelocity < 0f)
         {
-            _verticalVelocity = -2f; // pequeño empuje para mantenerlo pegado al suelo
+            _verticalVelocity = -3f; // pequeño empuje para mantenerlo pegado al suelo
         }
         _verticalVelocity += _gravity * Time.deltaTime;
         _moveDirection.y = _verticalVelocity;

@@ -32,7 +32,8 @@ debe ser sostenible (~2-3 hs por día, un día liviano).
 Un tanque debe abrirse paso por una base enemiga y escapar. Todo está hecho con formas
 simples o assets de tanques/vehículos del Asset Store (nada humanoide).
 
-- **Player:** tanque con movimiento WASD, torreta que apunta al mouse y disparo con click.
+- **Player:** tanque con **controles de tanque clásico** (W avanza / S retrocede hacia donde mira el
+  tanque, A/D lo rotan sobre su eje vertical), torreta que apunta al mouse y disparo con click.
 - **Enemigos (mínimo 3 tipos):**
   - *Centinela:* torreta fija que dispara a intervalos.
   - *Embestidor:* persigue al jugador y hace daño por contacto.
@@ -55,6 +56,25 @@ simples o assets de tanques/vehículos del Asset Store (nada humanoide).
 - Un script por responsabilidad; nombres consistentes en todo el proyecto.
 - Carpetas sugeridas dentro de `Assets/`: `Scripts/`, `Prefabs/`, `Scenes/`, `Materials/`, `UI/`.
 - Git con `.gitignore` de Unity; commits chicos y frecuentes.
+
+## Git: ramas y flujo de trabajo
+Repo: https://github.com/marcosvizio/Interceptor_Zero (binarios por Git LFS según `.gitattributes`).
+
+| Rama | Para qué |
+|---|---|
+| `dev` | Rama de trabajo diaria. Todos los cambios se hacen y se commitean acá. |
+| `prod` | Versión estable y jugable. Es la que se buildea para itch.io y se sube a Drive. |
+| `main` | Rama por defecto de GitHub. Se mantiene igual que `prod` (se actualiza junto con ella). |
+
+- Nunca se trabaja directo en `prod` ni en `main`: solo reciben merges desde `dev` de cosas probadas.
+- Día a día (en `dev`): commit chico por cada cosa que funciona + `git push`.
+- Pasar a producción cuando algo está probado:
+  ```
+  git switch prod && git merge dev && git push
+  git switch main && git merge prod && git push
+  git switch dev
+  ```
+- Si algo se rompe en `dev`, `prod`/`main` siguen jugables: se puede volver con `git switch prod`.
 
 ## Compatibilidad WebGL (tener en cuenta desde el día 1)
 - No usar threads ni `System.IO` para guardar archivos.
@@ -80,12 +100,12 @@ Estoy aprendiendo y quiero entender lo que entrego, así que:
 Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 
 ### Día 1 — Base y movimiento
-- [x] Proyecto Unity 3D (URP), repo Git y `.gitignore` de Unity (falta commitear el trabajo del día)
+- [x] Proyecto Unity 3D (URP), repo Git y `.gitignore` de Unity; ramas `main`/`prod`/`dev` en GitHub
 - [ ] Diseño del nivel en papel (inicio, obstáculos, generadores, compuerta)
 - [x] Importar assets (tanque, entorno) — revisar que no haya materiales rosados en URP
 - [x] Cámara top view (`CameraFollow.cs`, se queda la versión actual)
 - [x] Movimiento del tanque con `CharacterController` + gravedad y colisión con el suelo
-- [ ] Rotación del casco hacia la dirección de movimiento (twin-stick)
+- [ ] Controles de tanque: A/D rotan el casco, W/S avanzan/retroceden según `transform.forward` (pasa al Día 2)
 - [ ] Ajustar el collider del Player
 
 ### Día 2 — Combate básico
@@ -123,7 +143,8 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [ ] Entregar
 
 ## Estado actual
-_Última actualización: 2026-10-02 (fin de la sesión 1). El Día 1 todavía no está cerrado._
+_Última actualización: 2026-10-04 (inicio del Día 2). Del Día 1 quedan pendientes los controles de tanque
+y el collider del Player; se hacen al principio del Día 2._
 
 ### Hecho
 - `PlayerController`: movimiento WASD con `CharacterController` y gravedad; disparo con click (Fire1).
@@ -137,27 +158,31 @@ _Última actualización: 2026-10-02 (fin de la sesión 1). El Día 1 todavía no
 - `CameraFollow` en la Main Camera: sigue al Player con `SmoothDamp` en `LateUpdate`, rotación fija
   (`_pitch`) y offset calculado con `_distance`. Lo escribió Claude; Marcos decidió dejarlo así.
 - `BulletPlaceholder` (shoot point) sin BoxCollider ni MeshRenderer.
-- Decisión de controles: **twin-stick**. WASD mueve en ejes de pantalla y el casco gira hacia donde se mueve;
-  el mouse apunta la torreta (Día 2); click dispara. El mouse NO rota el tanque entero.
+- Commit `380167d` "Día 1: movimiento, disparo y cámara top view", pusheado a `main`, `prod` y `dev`.
+  Se trabaja en `dev`.
+- Decisión de controles (2026-10-04, reemplaza a twin-stick): **tanque clásico**. W/S avanzan/retroceden
+  hacia donde mira el tanque, A/D rotan el casco sobre el eje Y; la cámara no rota. El mouse apunta la
+  torreta (Día 2); click dispara. El mouse NO rota el tanque entero.
 
 ### Próximo paso (empezar por acá)
-1. **Rotación del casco (la escribe Marcos, Claude solo guía y revisa):** en el `Update` del `PlayerController`,
-   - dirección solo horizontal a partir de `_input` (no usar `_moveDirection`, que lleva la gravedad en `.y`);
-   - `if` para rotar solo cuando hay input (evita el warning "Look rotation viewing vector is zero");
-   - `Quaternion.LookRotation` para la rotación objetivo;
-   - `Quaternion.Slerp` (`_rotationSpeed` ≈ 10) o `RotateTowards` (≈ 360–720 °/s), multiplicando por `Time.deltaTime`;
-   - si el tanque avanza de costado, rotar el modelo hijo, no el root.
+1. **Controles de tanque (los escribe Marcos, Claude solo guía y revisa):** en el `Update` del `PlayerController`,
+   - leer los ejes por separado (`turnInput` = Horizontal, `moveInput` = Vertical), **sin** `.normalized`
+     (con W+D normalizado el tanque avanzaría más lento al girar);
+   - rotar con `transform.Rotate(0f, turnInput * _rotationSpeed * Time.deltaTime, 0f)`;
+     `_rotationSpeed` pasa a ser grados/segundo (~120–180) y hay que cambiarlo en el **Inspector** del prefab,
+     porque el valor serializado pisa el default del código;
+   - mover con `transform.forward * moveInput * _speed`, sumarle la gravedad en `.y` y llamar a `Move`;
+   - rotar antes de mover, así el movimiento usa el `forward` de este frame;
+   - si W lo mueve de costado o hacia atrás, el modelo hijo no tiene el frente en +Z: rotar el hijo, no el root.
 2. **Collider del Player:** root con escala 1 y modelo como hijo; ajustar `Height`/`Radius`/`Center.y = Height/2`.
-3. **Commit** del Día 1 (hoy todo está untracked).
+3. Commit en `dev` de cada paso + `git push`; al cerrar el Día 1, merge a `prod` y `main` (ver "Git: ramas y flujo de trabajo").
+4. Seguir con el Día 2: torreta hacia el mouse.
 
 ### Pendientes menores
-- Typo "Mrrcos" en el header de `PlayerController.cs`.
 - Convención de nombres en `BulletData`: los campos públicos usan `_` (`_speed`, `_damage`) y `bulletPrefab` no.
 - Carpeta `Prefab` vs `Prefabs` sugerida.
 - Para la torreta (Día 2): agrupar la base de la torreta y `Canons` bajo un objeto vacío `Turret` con el pivot
   en el centro de giro; mouse → suelo con `Camera.ScreenPointToRay` + `Plane.Raycast`; rotar solo en Y.
 
 ### Forma de trabajo acordada
-Marcos tiene que poder explicarle cada script al profesor: Claude **no escribe sistemas completos** aunque se
-le pida "necesito X". Guía con pasos, pistas y preguntas, revisa el código que escribe Marcos y solo aplica
-directamente los arreglos puntuales que se le pidan de forma explícita.
+Marcos tiene que poder explicarle cada script al profesor: Claude **no escribe sistemas completos** aunque se le pida "necesito X". Guía con pasos, pistas y preguntas, revisa el código que escribe Marcos y solo aplica directamente los arreglos puntuales que se le pidan de forma explícita.
