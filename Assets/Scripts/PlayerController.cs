@@ -4,13 +4,13 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-01 21:33:23
- Last Modification Date: 2026-10-04 23:22:05
+ Last Modification Date: 2026-10-05 22:43:09
 
 */
 
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : Character
 {
     private float _turnInput;
     private float _moveInput;
@@ -24,8 +24,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject _bulletPrefab;
     [SerializeField] private Transform _shootPoint;
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _characterController = GetComponent<CharacterController>();
     }
 
@@ -80,5 +81,10 @@ public class PlayerController : MonoBehaviour
 
         // La dirección sale del Shoot Point (su eje Z azul), no de la rotación de la bala.
         bullet.GetComponent<BulletController>().Launch(_shootPoint.forward);
+    }
+
+    protected override void Die()
+    {
+        Debug.Log("El Player murió");
     }
 }

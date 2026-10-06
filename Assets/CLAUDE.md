@@ -110,9 +110,9 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 
 ### Día 2 — Combate básico
 - [x] ~~Rotación de la torreta hacia el mouse~~ — descartado (2026-10-04): el cañón apunta siempre hacia adelante
-- [x] Disparo (`BulletController`) — funciona; falta que algo implemente `IDamagable` para probar el daño
-- [ ] Daño
-- [ ] Jerarquía `Personaje` / `Enemy`: vida y muerte
+- [x] Disparo (`BulletController`) — funciona; `Character` implementa `IDamagable`
+- [x] Daño (`TakeDamage` en `Character`, probado disparándole al `Charger`)
+- [x] Jerarquía `Character` / `Enemy`: vida y muerte
 - [ ] Primer enemigo (Embestidor): persecución y daño por contacto
 
 ### Día 3 — Nivel y spawn
@@ -143,7 +143,10 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [ ] Entregar
 
 ## Estado actual
-_Última actualización: 2026-10-04 (Día 2). Día 1 completo._
+_Última actualización: 2026-10-05 (Día 2: Parte A hecha, sigue la Parte B). Día 1 completo (commit `9838c4b`)._
+
+**Nombres en código (en inglés):** `Personaje` → `Character`, `Embestidor` → `Charger`.
+En este documento el diseño puede seguir usando los nombres en español.
 
 ### Hecho
 - `PlayerController`: controles de tanque (A/D `transform.Rotate` en Y a `_rotationSpeed` °/s, W/S
@@ -167,27 +170,23 @@ _Última actualización: 2026-10-04 (Día 2). Día 1 completo._
   dispara (click). Para apuntar se gira el tanque entero con A/D.
 - Collider del Player ajustado: `CharacterController` Height 0 / Radius 4 / Center 0 (con la escala 0.346
   del root queda una esfera de radio ~1.4 centrada en el pivot).
+- **Día 2, Parte A (2026-10-05), probada:** jerarquía `Character` → `PlayerController` / `Enemy` → `Charger`.
+  - `Character` (abstract, `IDamagable`): `_maxHealth` (Inspector), `_currentHealth`, `IsDead { get; private set; }`;
+    `virtual Awake` carga la vida; `TakeDamage` con guard `if (IsDead) return`, `-=`, `Mathf.Max(0f, ...)`,
+    Debug.Log, y al llegar a 0 → `IsDead = true` y después `Die()`; `abstract Die()`.
+  - `PlayerController : Character`: `override Awake` con `base.Awake()` primero; `Die()` = Debug.Log (respawn: Día 3).
+  - `Enemy : Character` (abstract): en `Awake` busca al Player por tag (guard con `return` si es null);
+    `Update` con guard (`IsDead` / sin player) → `abstract Behave()` (patrón Template Method); `Die()` → `Destroy`.
+  - `Charger : Enemy` con `Behave()` vacío. Prefab `Charger`: cubo 1.5×3×1.5, Rigidbody con rotación X/Z
+    congelada, `_maxHealth` 60 (3 disparos de 20).
+  - Tag "Player" en el prefab; carpeta `Prefab` renombrada a `Prefabs` (GUIDs conservados).
 
 ### Próximo paso (empezar por acá)
-0. Commitear en `dev` el collider + CLAUDE.md, y pasar el Día 1 a `prod` → `main`.
-1. **Parte A — Jerarquía y daño (Marcos la escribe con guía):**
-   - `Personaje` (abstract, `MonoBehaviour`, implementa `IDamagable`): `_maxHealth`, `_currentHealth`,
-     `IsDead`, `TakeDamage` (resta, `Mathf.Max(0, ...)`, llama a `Die()` una sola vez), `protected abstract void Die()`.
-     `protected virtual void Awake()` inicializa la vida.
-   - `PlayerController : Personaje`: su `Awake` pasa a `protected override` + `base.Awake()`; `Die()` por
-     ahora `Debug.Log` (el respawn es Día 3).
-   - `Enemy : Personaje` (abstract): busca al Player por tag en `Awake`, `Die()` → `Destroy(gameObject)`,
-     `Update` llama a `protected abstract void Behave()` (cada tipo de enemigo la sobrescribe).
-   - `Embestidor : Enemy` con `Behave()` vacío; prefab monolítico (cubo/cápsula) con Rigidbody.
-   - Prueba: dispararle → la vida baja (Debug.Log) → muere a los N disparos.
-   - Tag "Player" aplicado en el **prefab** (hoy es solo override de la escena).
-2. **Parte B — Embestidor:** persecución con Rigidbody (`linearVelocity` en `FixedUpdate`, rotaciones X/Z
+1. **Parte B — Embestidor (`Charger`):** persecución con Rigidbody (`linearVelocity` en `FixedUpdate`, rotaciones X/Z
    congeladas) y daño por contacto con cooldown (`OnCollisionStay` + `Time.time`).
 
 ### Pendientes menores
 - Convención de nombres en `BulletData`: los campos públicos usan `_` (`_speed`, `_damage`) y `bulletPrefab` no.
-- Carpeta `Prefab` vs `Prefabs` sugerida.
-- Campo `_input` (Vector2) en `PlayerController` quedó sin uso después de los controles de tanque: borrarlo.
 - Los dos `Canon` del Player tienen `CapsuleCollider`: revisar si hacen falta (las balas nacen al lado y
   `IgnoreCollision` solo ignora el `CharacterController`).
 
