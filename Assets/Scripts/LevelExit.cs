@@ -8,7 +8,6 @@ public class LevelExit : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log(other.name);
         if(!other.CompareTag("Player")) return;
         if(!_isOpen) return;
         if(_levelCompleted) return;

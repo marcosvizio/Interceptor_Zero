@@ -118,7 +118,7 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 ### Día 3 — Nivel y spawn
 - [ ] Armar el nivel (terreno, paredes, obstáculos) y organizar la Hierarchy
 - [x] Punto de inicio y respawn al morir
-- [ ] Condición de llegada al final del nivel (compuerta/trigger)
+- [x] Condición de llegada al final del nivel (compuerta/trigger)
 
 ### Día 4 — Desafío y enemigos restantes
 - [ ] Generadores (destruir o activar) y lógica para abrir la compuerta
@@ -143,7 +143,7 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [ ] Entregar
 
 ## Estado actual
-_Última actualización: 2026-10-07 (Día 3: respawn hecho, sigue el final del nivel). Días 1 y 2 completos._
+_Última actualización: 2026-10-07 (Día 3: respawn y final del nivel hechos, sigue diseñar el nivel). Días 1 y 2 completos._
 
 **Nombres en código (en inglés):** `Personaje` → `Character`, `Embestidor` → `Charger`.
 En este documento el diseño puede seguir usando los nombres en español.
@@ -194,19 +194,22 @@ En este documento el diseño puede seguir usando los nombres en español.
   `PlayerController.Die()` → `Respawn()`: guard de `_spawnPoint`, apaga el `CharacterController`,
   `SetPositionAndRotation`, lo prende, `_verticalVelocity = 0`, `ResetHealth()`.
   Ramas `dev`/`prod`/`main` sincronizadas en `9bf9434` (Día 2).
+- **Día 3, paso 2 (2026-10-07), probado — commit `541186f`:** `LevelExit` (cubo chato con `BoxCollider`
+  Is Trigger alto) + script `LevelExit`: `OnTriggerEnter(Collider other)` con guards `CompareTag("Player")`,
+  `_isOpen` (gancho del Día 4: los generadores la abren) y `_levelCompleted` (una sola vez) → Debug.Log.
 
 ### Próximo paso (empezar por acá)
-0. Arreglar: al guard de `_spawnPoint` en `Respawn()` le falta el `return`. Guardar la escena (la referencia
-   al `SpawnPoint` no estaba guardada en `Scene1.unity`). Commit.
-1. **Día 3, paso 2 — Final del nivel (Marcos lo escribe con guía):**
-   - Objeto `LevelExit`: plataforma visible (cubo chato) con `BoxCollider` en **Is Trigger** + script `LevelExit`.
-   - `OnTriggerEnter(Collider other)` (recibe `Collider`, no `Collision`) + `CompareTag("Player")` +
-     guard `_levelCompleted` (que no se complete dos veces) → Debug.Log "Nivel completado".
-   - `[SerializeField] bool _isOpen = true` como gancho para el Día 4 (los generadores la abren).
-   - Los triggers necesitan un Rigidbody o `CharacterController` en alguno de los dos objetos (el Player tiene CC).
-   - La pantalla de victoria es Día 5. Misma técnica para una "kill zone" si el tanque puede caerse del mapa.
-2. **Día 3, paso 3 — Armar el nivel:** primero el diseño en papel (pendiente del Día 1): inicio, obstáculos,
-   3 generadores con su enemigo, compuerta. Después el blockout con cubos y organizar la Hierarchy.
+0. Arreglar (sigue pendiente): al guard de `_spawnPoint` en `Respawn()` le falta el `return`.
+   Sacar el `Debug.Log(other.name)` de prueba de `LevelExit`.
+1. **Día 3, paso 3a — Diseño del nivel en papel (pendiente del Día 1):** dibujo visto desde arriba con
+   SpawnPoint, LevelExit, 3 generadores (cada uno con su enemigo: Charger, Centinela, Patrullero), paredes,
+   obstáculos/coberturas y caminos. Reglas: spawn fuera del rango de todo enemigo; primer encuentro fácil;
+   pasillos de ≥ 3 tanques de ancho (el tanque gira, no se desliza de costado); bordes cerrados o kill zone;
+   escala de referencia: el tanque cruza 50 unidades en 10 s. Marcos puede guardar una foto en el proyecto
+   para que Claude la revise.
+2. **Día 3, paso 3b — Blockout en Unity:** paredes y obstáculos con cubos (prefab de pared), generadores
+   como cilindros de placeholder, y Hierarchy organizada con objetos vacíos padres (Environment, Level,
+   Gameplay, Enemies, Generators).
 
 ### Pendientes menores
 - Convención de nombres en `BulletData`: los campos públicos usan `_` (`_speed`, `_damage`) y `bulletPrefab` no.

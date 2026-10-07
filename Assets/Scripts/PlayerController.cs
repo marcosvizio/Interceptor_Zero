@@ -4,7 +4,7 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-01 21:33:23
- Last Modification Date: 2026-10-07 19:35:51
+ Last Modification Date: 2026-10-07 20:51:27
 
 */
 
@@ -88,6 +88,7 @@ public class PlayerController : Character
     {
         if(_spawnPoint == null){ 
             Debug.LogError("No hay un Spawn Point asignado");
+            return;
         }
         _characterController.enabled = false;
         transform.SetPositionAndRotation(_spawnPoint.position, _spawnPoint.rotation);
