@@ -4,7 +4,7 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-01 21:33:23
- Last Modification Date: 2026-10-05 22:43:09
+ Last Modification Date: 2026-10-07 19:35:51
 
 */
 
@@ -23,6 +23,7 @@ public class PlayerController : Character
     [SerializeField] private float _gravity = -9.81f;
     [SerializeField] private GameObject _bulletPrefab;
     [SerializeField] private Transform _shootPoint;
+    [SerializeField] private Transform _spawnPoint;
 
     protected override void Awake()
     {
@@ -83,8 +84,21 @@ public class PlayerController : Character
         bullet.GetComponent<BulletController>().Launch(_shootPoint.forward);
     }
 
+    private void Respawn()
+    {
+        if(_spawnPoint == null){ 
+            Debug.LogError("No hay un Spawn Point asignado");
+        }
+        _characterController.enabled = false;
+        transform.SetPositionAndRotation(_spawnPoint.position, _spawnPoint.rotation);
+        _characterController.enabled = true;
+        _verticalVelocity = 0f;
+        ResetHealth();
+    }
+
     protected override void Die()
     {
         Debug.Log("El Player murió");
+        Respawn();
     }
 }

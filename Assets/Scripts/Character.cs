@@ -4,7 +4,7 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-06 23:53:54
- Last Modification Date: 2026-10-06 23:54:32
+ Last Modification Date: 2026-10-07 19:24:32
 
 */
 
@@ -16,11 +16,12 @@ public abstract class Character : MonoBehaviour, IDamagable
     [SerializeField] protected float _maxHealth = 100f;
     protected float _currentHealth;
 
+    
     public bool IsDead { get; private set; }
 
     protected virtual void Awake()
     {
-        _currentHealth = _maxHealth;
+        ResetHealth();
     }
     
     public void TakeDamage(float damage)
@@ -38,6 +39,12 @@ public abstract class Character : MonoBehaviour, IDamagable
             IsDead = true;
             Die();  
         } 
+    }
+
+    protected void ResetHealth()
+    {
+        _currentHealth = _maxHealth;
+        IsDead = false;
     }
 
     protected abstract void Die();

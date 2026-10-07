@@ -4,7 +4,7 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-06 23:54:14
- Last Modification Date: 2026-10-07 02:16:18
+ Last Modification Date: 2026-10-07 18:55:35
 
 */
 
@@ -13,9 +13,8 @@ using UnityEngine;
 public abstract class Enemy : Character
 {
     protected Transform _player;
-
     [SerializeField] protected float _detectionRange = 10f;
-
+    
     protected override void Awake()
     {
         base.Awake();

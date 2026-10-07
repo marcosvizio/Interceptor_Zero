@@ -117,7 +117,7 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 
 ### Día 3 — Nivel y spawn
 - [ ] Armar el nivel (terreno, paredes, obstáculos) y organizar la Hierarchy
-- [ ] Punto de inicio y respawn al morir
+- [x] Punto de inicio y respawn al morir
 - [ ] Condición de llegada al final del nivel (compuerta/trigger)
 
 ### Día 4 — Desafío y enemigos restantes
@@ -143,7 +143,7 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [ ] Entregar
 
 ## Estado actual
-_Última actualización: 2026-10-07 (empieza el Día 3). Días 1 y 2 completos (commit `d686fd9` en `dev`)._
+_Última actualización: 2026-10-07 (Día 3: respawn hecho, sigue el final del nivel). Días 1 y 2 completos._
 
 **Nombres en código (en inglés):** `Personaje` → `Character`, `Embestidor` → `Charger`.
 En este documento el diseño puede seguir usando los nombres en español.
@@ -189,20 +189,23 @@ En este documento el diseño puede seguir usando los nombres en español.
     (`_nextAttackTime >= Time.time` → return) + `TryGetComponent<IDamagable>` + `_nextAttackTime = Time.time + _attackCooldown`.
     20 de daño cada 1 s.
 
+- **Día 3, paso 1 (2026-10-07), probado — Respawn:** `SpawnPoint` vacío en la escena;
+  `Character.ResetHealth()` (protected: vida al máximo + `IsDead = false`), reutilizado por `Awake`;
+  `PlayerController.Die()` → `Respawn()`: guard de `_spawnPoint`, apaga el `CharacterController`,
+  `SetPositionAndRotation`, lo prende, `_verticalVelocity = 0`, `ResetHealth()`.
+  Ramas `dev`/`prod`/`main` sincronizadas en `9bf9434` (Día 2).
+
 ### Próximo paso (empezar por acá)
-0. **Git:** `prod` local tiene el Día 1 sin pushear y `main`/`origin` siguen en `380167d`. Pasar el Día 2:
-   `dev` → `prod` → `main` y pushear las dos.
-1. **Día 3, paso 1 — Respawn del Player (Marcos lo escribe con guía):**
-   - Objeto vacío `SpawnPoint` en la escena (posición y rotación de inicio; flecha azul = hacia dónde mira el tanque).
-   - En `Character`: `protected void ResetHealth()` (vida al máximo + `IsDead = false`; tiene que estar en
-     `Character` porque `IsDead` tiene `private set`). `Awake` puede reutilizarlo.
-   - En `PlayerController`: `[SerializeField] Transform _spawnPoint`; `Die()` → `Respawn()`.
-   - `Respawn()`: desactivar el `CharacterController`, `transform.SetPositionAndRotation(...)`, reactivarlo
-     (si no, el CC pisa la posición nueva), `_verticalVelocity = 0`, `ResetHealth()`.
-2. **Día 3, paso 2 — Final del nivel:** compuerta con collider **trigger** + `OnTriggerEnter` + `CompareTag("Player")`.
-   Por ahora un Debug.Log "Nivel completado" (la pantalla de victoria es Día 5). La misma técnica sirve para
-   una "kill zone" si el tanque puede caerse del mapa.
-3. **Día 3, paso 3 — Armar el nivel:** primero el diseño en papel (pendiente del Día 1): inicio, obstáculos,
+0. Arreglar: al guard de `_spawnPoint` en `Respawn()` le falta el `return`. Guardar la escena (la referencia
+   al `SpawnPoint` no estaba guardada en `Scene1.unity`). Commit.
+1. **Día 3, paso 2 — Final del nivel (Marcos lo escribe con guía):**
+   - Objeto `LevelExit`: plataforma visible (cubo chato) con `BoxCollider` en **Is Trigger** + script `LevelExit`.
+   - `OnTriggerEnter(Collider other)` (recibe `Collider`, no `Collision`) + `CompareTag("Player")` +
+     guard `_levelCompleted` (que no se complete dos veces) → Debug.Log "Nivel completado".
+   - `[SerializeField] bool _isOpen = true` como gancho para el Día 4 (los generadores la abren).
+   - Los triggers necesitan un Rigidbody o `CharacterController` en alguno de los dos objetos (el Player tiene CC).
+   - La pantalla de victoria es Día 5. Misma técnica para una "kill zone" si el tanque puede caerse del mapa.
+2. **Día 3, paso 3 — Armar el nivel:** primero el diseño en papel (pendiente del Día 1): inicio, obstáculos,
    3 generadores con su enemigo, compuerta. Después el blockout con cubos y organizar la Hierarchy.
 
 ### Pendientes menores
