@@ -1,8 +1,20 @@
+/*
+
+ Author: Marcos Vizio
+ Email: marcosfvizio@gmail.com
+
+ Creation Date: 2026-10-06 23:54:14
+ Last Modification Date: 2026-10-07 02:16:18
+
+*/
+
 using UnityEngine;
 
 public abstract class Enemy : Character
 {
     protected Transform _player;
+
+    [SerializeField] protected float _detectionRange = 10f;
 
     protected override void Awake()
     {
@@ -16,17 +28,30 @@ public abstract class Enemy : Character
         }
 
         _player = playerObject.transform;
-
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (IsDead || !_player) return;
         Behave();
     }
 
+    protected bool IsPlayerInRange()
+    {
+        // devolvé true si la distancia entre el enemigo y el player es menor o igual a _detectionRange
+
+        return Vector3.Distance(_player.position, transform.position) <= _detectionRange;
+
+    }
+
     protected abstract void Behave();
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, _detectionRange);
+    }
+
 
     protected override void Die()
     {

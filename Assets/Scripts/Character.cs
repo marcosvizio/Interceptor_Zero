@@ -1,3 +1,13 @@
+/*
+
+ Author: Marcos Vizio
+ Email: marcosfvizio@gmail.com
+
+ Creation Date: 2026-10-06 23:53:54
+ Last Modification Date: 2026-10-06 23:54:32
+
+*/
+
 using UnityEngine;
 
 public abstract class Character : MonoBehaviour, IDamagable

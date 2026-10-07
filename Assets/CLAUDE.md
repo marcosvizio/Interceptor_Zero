@@ -182,8 +182,19 @@ En este documento el diseño puede seguir usando los nombres en español.
   - Tag "Player" en el prefab; carpeta `Prefab` renombrada a `Prefabs` (GUIDs conservados).
 
 ### Próximo paso (empezar por acá)
-1. **Parte B — Embestidor (`Charger`):** persecución con Rigidbody (`linearVelocity` en `FixedUpdate`, rotaciones X/Z
-   congeladas) y daño por contacto con cooldown (`OnCollisionStay` + `Time.time`).
+1. **Parte B — Embestidor (`Charger`), en curso (Marcos la escribe con guía):**
+   - En `Enemy` (lo comparten los 3 tipos): `_detectionRange`, helper `protected bool IsPlayerInRange()`
+     (`Vector3.Distance`) y `OnDrawGizmosSelected` con `Gizmos.DrawWireSphere` para ver el rango.
+   - En `Charger`: `[RequireComponent(typeof(Rigidbody))]`, `_moveSpeed` (~4, menos que el Player para que
+     pueda escapar), `_contactDamage` (20), `_attackCooldown` (1 s), `_nextAttackTime`, `_rb` en
+     `override Awake` (con `base.Awake()`).
+   - `Behave()`: fuera de rango → frenar en X/Z conservando `linearVelocity.y`; en rango → dirección =
+     player − posición, `y = 0`, `.normalized`, y `linearVelocity = (dir.x * speed, vel.y, dir.z * speed)`.
+     Asignar velocidad en `Update` está bien (no acumula); `AddForce` sí iría en `FixedUpdate`.
+   - Daño por contacto: `OnCollisionStay` + `CompareTag("Player")` + cooldown con `Time.time` +
+     `TryGetComponent<IDamagable>` (no depende de `PlayerController`).
+   - Rigidbody del Charger: Interpolate para que no tiemble con la cámara.
+   - Prueba: persigue solo dentro del rango, para afuera, daña 20 cada 1 s en contacto, el Player "muere" (log).
 
 ### Pendientes menores
 - Convención de nombres en `BulletData`: los campos públicos usan `_` (`_speed`, `_damage`) y `bulletPrefab` no.
