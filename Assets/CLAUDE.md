@@ -34,11 +34,12 @@ simples o assets de tanques/vehículos del Asset Store (nada humanoide).
 
 - **Player:** tanque con **controles de tanque clásico** (W avanza / S retrocede hacia donde mira el
   tanque, A/D lo rotan sobre su eje vertical), cañón fijo hacia adelante y disparo con click.
-- **Enemigos (mínimo 3 tipos):**
-  - *Centinela:* torreta fija que dispara a intervalos.
-  - *Embestidor:* persigue al jugador y hace daño por contacto.
-  - *Patrullero:* recorre una ruta y ataca si el jugador se acerca.
-- **Desafío:** 3 generadores repartidos por el nivel, cada uno custodiado por un enemigo.
+- **Enemigos (2 tipos; la consigna pide mínimo 3 enemigos, no 3 tipos):**
+  - *Centinela:* tanque enemigo **quieto** que gira hacia el jugador y le dispara a intervalos cuando está en rango.
+  - *Embestidor (`Charger`):* persigue al jugador y hace daño por contacto.
+  - ~~*Patrullero*~~: descartado por ahora (2026-10-08); se puede retomar en el Día 6 si sobra tiempo.
+- **Desafío:** 3 generadores repartidos por el nivel, cada uno custodiado por enemigos. Se pueden destruir
+  en **cualquier orden**; al destruir los 3 se abre la salida.
   Hay que destruirlos o activarlos para abrir la compuerta de salida.
 - **Final del nivel:** cruzar la compuerta abierta -> pantalla de victoria (o siguiente nivel).
 - **Muerte:** respawn del tanque en el punto de inicio.
@@ -101,7 +102,7 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 
 ### Día 1 — Base y movimiento
 - [x] Proyecto Unity 3D (URP), repo Git y `.gitignore` de Unity; ramas `main`/`prod`/`dev` en GitHub
-- [ ] Diseño del nivel en papel (inicio, obstáculos, generadores, compuerta)
+- [x] Diseño del nivel en papel (inicio, obstáculos, generadores, compuerta) — `Docs/Boceto Nivel.jpeg`
 - [x] Importar assets (tanque, entorno) — revisar que no haya materiales rosados en URP
 - [x] Cámara top view (`CameraFollow.cs`, se queda la versión actual)
 - [x] Movimiento del tanque con `CharacterController` + gravedad y colisión con el suelo
@@ -116,14 +117,14 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [x] Primer enemigo (Embestidor / `Charger`): persecución y daño por contacto
 
 ### Día 3 — Nivel y spawn
-- [ ] Armar el nivel (terreno, paredes, obstáculos) y organizar la Hierarchy
+- [x] Armar el nivel (terreno, paredes, obstáculos) y organizar la Hierarchy
 - [x] Punto de inicio y respawn al morir
 - [x] Condición de llegada al final del nivel (compuerta/trigger)
 
 ### Día 4 — Desafío y enemigos restantes
 - [ ] Generadores (destruir o activar) y lógica para abrir la compuerta
-- [ ] Enemigo Centinela (torreta fija que dispara)
-- [ ] Enemigo Patrullero (ruta + ataque por cercanía)
+- [ ] Enemigo Centinela (tanque enemigo quieto que apunta y dispara; reutiliza `BulletController`/`BulletData`)
+- [x] ~~Enemigo Patrullero~~ — descartado por ahora (2026-10-08)
 - [ ] Ubicar enemigos custodiando los generadores
 
 ### Día 5 — Menú y primer build WebGL
@@ -143,7 +144,16 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [ ] Entregar
 
 ## Estado actual
-_Última actualización: 2026-10-07 (Día 3: respawn y final del nivel hechos, sigue diseñar el nivel). Días 1 y 2 completos._
+_Última actualización: 2026-10-18 (Días 1, 2 y 3 completos; empieza el Día 4)._
+
+**ENTREGA: 2026-10-21.** Marcos quiere tener casi todo el 2026-10-18 (tiene otros TPs). Prioridad, en orden;
+si falta tiempo se recorta desde abajo:
+1. Generadores (paso A + B): son el **desafío obligatorio** (consigna 3) y abren la salida.
+2. Menú con botón Play + pantalla de victoria (consignas 2 y 8).
+3. **Build WebGL subido a itch.io** (entregable obligatorio; hacerlo apenas estén 1 y 2, no al final).
+4. Enemigos: ya hay Chargers (alcanza para la consigna de ≥3 enemigos). Centinela solo si sobra tiempo.
+5. Object Pooling de balas (punto extra).
+6. PDF + Drive (día 21 a más tardar). Pulido (sonido, partículas, UI de vida) solo si sobra.
 
 **Nombres en código (en inglés):** `Personaje` → `Character`, `Embestidor` → `Charger`.
 En este documento el diseño puede seguir usando los nombres en español.
@@ -198,18 +208,39 @@ En este documento el diseño puede seguir usando los nombres en español.
   Is Trigger alto) + script `LevelExit`: `OnTriggerEnter(Collider other)` con guards `CompareTag("Player")`,
   `_isOpen` (gancho del Día 4: los generadores la abren) y `_levelCompleted` (una sola vez) → Debug.Log.
 
+- **Día 3, paso 3 — Nivel (2026-10-18), hecho:** boceto en `Docs/Boceto Nivel.jpeg` (escala 1 cuadrado =
+  2 u; generadores en cualquier orden; Centinela = tanque enemigo quieto que dispara; Patrullero descartado).
+  Blockout y decoración final hechos por Marcos: captura en `Docs/Nivel Final.png`. Caminos arriba y abajo,
+  pasto con árboles en el centro, hangares y edificios del pack `RPG_FPS_game_assets_industrial`, prefabs
+  propios nuevos (`Barril`, `BloqueoCamino`, `Grass`, `Hangar`, `Hangar2`, `Road`, `VallaConcreto`, `VallaConcreto2`).
+  Ya hay un modelo de generador del pack en uso (`Other_props/Generators/Generator_v1`).
+  Herramienta de editor `Assets/Editor/SnapToGroundEditor.cs` (Tools → Alinear Árboles al Suelo, Ctrl+G):
+  raycast hacia abajo contra los colliders hijos de `Ground`. Está en `Editor/`, así que no entra al build.
+- SpawnPoint abajo a la izquierda (sobre el camino de abajo); LevelExit arriba a la derecha (marcados en
+  `Docs/Nivel Final.png`).
+- **Limpieza de assets (2026-10-18, hecha por Claude):** se calcularon las dependencias reales (escena `Scene1`,
+  `Prefabs/`, `Scripts/`, `Materials/`, `Settings/`, `Editor/`, ProjectSettings, incluyendo los `.meta` de los
+  modelos) y se **movieron** a `C:\Users\marco\Proyectos_Unity\Interceptor_Zero_assets_sin_usar\` (fuera del
+  proyecto, con la misma estructura de carpetas) los archivos sin usar: `RPG_FPS_game_assets_industrial`
+  (321 archivos, 407 MB), `WZ PAK` (162, 32 MB) y `PBS Materials Variety Pack` (230, 1,07 GB). `Assets/` pasó a
+  ~60 MB. Si algo aparece rosado o como "Missing", se restaura copiándolo de esa carpeta a la misma ruta.
+  `SimpleNaturePack` y `BTM_Assets` no se tocaron (son chicos).
+  Ojo: `PBS Materials Variety Pack` (~1 GB) ya estaba commiteado y pusheado en `541186f`; borrarlo ahora no
+  libera el espacio LFS en GitHub (queda en el historial). No reescribir el historial antes de la entrega.
+
 ### Próximo paso (empezar por acá)
-0. Arreglar (sigue pendiente): al guard de `_spawnPoint` en `Respawn()` le falta el `return`.
-   Sacar el `Debug.Log(other.name)` de prueba de `LevelExit`.
-1. **Día 3, paso 3a — Diseño del nivel en papel (pendiente del Día 1):** dibujo visto desde arriba con
-   SpawnPoint, LevelExit, 3 generadores (cada uno con su enemigo: Charger, Centinela, Patrullero), paredes,
-   obstáculos/coberturas y caminos. Reglas: spawn fuera del rango de todo enemigo; primer encuentro fácil;
-   pasillos de ≥ 3 tanques de ancho (el tanque gira, no se desliza de costado); bordes cerrados o kill zone;
-   escala de referencia: el tanque cruza 50 unidades en 10 s. Marcos puede guardar una foto en el proyecto
-   para que Claude la revise.
-2. **Día 3, paso 3b — Blockout en Unity:** paredes y obstáculos con cubos (prefab de pared), generadores
-   como cilindros de placeholder, y Hierarchy organizada con objetos vacíos padres (Environment, Level,
-   Gameplay, Enemies, Generators).
+0. Abrir Unity, dejar que reimporte, verificar que la escena se vea igual y que la Console no muestre
+   "Missing"; después commitear el nivel + `Docs/` + `Editor/` + la limpieza.
+1. **Día 4, paso A — `Generator` (Marcos lo escribe con guía):** `MonoBehaviour, IDamagable` (no hereda de
+   `Character`: no es un personaje, no se mueve ni reaparece). `_maxHealth`, `_currentHealth`, `IsDestroyed`;
+   `TakeDamage` con el mismo patrón que `Character` (guard, `-=`, `Mathf.Max`, log, una sola vez);
+   al destruirse: Debug.Log + feedback visual simple. Collider normal (no trigger) en el modelo `Generator_v1`.
+2. **Día 4, paso B — Abrir la salida:** evento C# en `Generator` (`public event System.Action<Generator> Destroyed`)
+   y `LevelExit` con `[SerializeField] Generator[] _generators` que se suscribe, cuenta los que quedan y al
+   llegar a 0 pone `_isOpen = true` y desactiva la barrera (`BloqueoCamino`). Patrón Observer.
+3. **Día 4, paso C — Centinela:** tanque enemigo quieto (`Enemy`), gira hacia el player en rango y dispara con
+   cooldown reutilizando `BulletController`/`BulletData` (ojo: la bala enemiga no debe chocar con su tirador).
+4. Ubicar enemigos custodiando los generadores y balancear.
 
 ### Pendientes menores
 - Convención de nombres en `BulletData`: los campos públicos usan `_` (`_speed`, `_damage`) y `bulletPrefab` no.
