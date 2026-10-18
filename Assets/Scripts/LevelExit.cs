@@ -12,7 +12,7 @@ public class LevelExit : MonoBehaviour
 
     void Start()
     {
-        _remaining = _generators.Length;
+        _remaining = 0;
         
         foreach (Generator generator in _generators)
         {
@@ -21,6 +21,7 @@ public class LevelExit : MonoBehaviour
                 continue;
             }
             generator.Destroyed += OnGeneratorDestroyed;
+            _remaining++;
         }
 
         if (_remaining <= 0)
@@ -39,13 +40,18 @@ public class LevelExit : MonoBehaviour
         }
     }
 
-    private void Open()
+   private void Open()
     {
-        if (_barriers != null) return;
         _isOpen = true;
-        _barriers.SetActive(false);
+
+        if (_barriers != null)
+        {
+            _barriers.SetActive(false);
+        }
+
         Debug.Log("La salida esta abierta!");
     }
+
 
     void OnDestroy()
     {
