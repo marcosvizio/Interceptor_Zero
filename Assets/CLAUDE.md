@@ -122,7 +122,7 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [x] Condición de llegada al final del nivel (compuerta/trigger)
 
 ### Día 4 — Desafío y enemigos restantes
-- [ ] Generadores (destruir o activar) y lógica para abrir la compuerta
+- [x] Generadores (destruir) y lógica para abrir la compuerta (evento `Destroyed` + `LevelExit`)
 - [ ] Enemigo Centinela (tanque enemigo quieto que apunta y dispara; reutiliza `BulletController`/`BulletData`)
 - [x] ~~Enemigo Patrullero~~ — descartado por ahora (2026-10-08)
 - [ ] Ubicar enemigos custodiando los generadores
@@ -228,17 +228,30 @@ En este documento el diseño puede seguir usando los nombres en español.
   Ojo: `PBS Materials Variety Pack` (~1 GB) ya estaba commiteado y pusheado en `541186f`; borrarlo ahora no
   libera el espacio LFS en GitHub (queda en el historial). No reescribir el historial antes de la entrega.
 
+- **Día 4, pasos A + B (2026-10-18), probados — el desafío obligatorio está completo:**
+  - `Generator : MonoBehaviour, IDamagable` (`[RequireComponent(typeof(MeshRenderer))]`): `_maxHealth` 100,
+    `IsDestroyed { get; private set; }`, `public event System.Action Destroyed`; `TakeDamage` con guard,
+    `-=`, `Mathf.Max(0f, ...)`, log; `OnDestroyed()` marca `IsDestroyed`, invoca `Destroyed?.Invoke()` y pone
+    el material en negro (`.material`, copia por instancia). Prefab `Prefabs/Generador.prefab` con el script;
+    3 instancias en la escena.
+  - `LevelExit`: `_isOpen` privado (lo controla el código), `[SerializeField] GameObject _barriers`
+    (prefab `BloqueoSalida`), `[SerializeField] Generator[] _generators` (los 3 asignados), `_remaining`.
+    `Start` se suscribe con `+=` (guard de null); `OnGeneratorDestroyed()` descuenta y al llegar a 0 llama a
+    `Open()` (abre + `SetActive(false)` de la barrera); `OnDestroy()` desuscribe con `-=`. Patrón Observer.
+  - Detalles menores en `LevelExit`: `_remaining` cuenta también los huecos null del array; `Open()` no
+    chequea `_barriers == null`; `_isOpen = true` repetido en `Start`; comentarios guía en `Open()`.
+
 ### Próximo paso (empezar por acá)
-0. Abrir Unity, dejar que reimporte, verificar que la escena se vea igual y que la Console no muestre
-   "Missing"; después commitear el nivel + `Docs/` + `Editor/` + la limpieza.
-1. **Día 4, paso A — `Generator` (Marcos lo escribe con guía):** `MonoBehaviour, IDamagable` (no hereda de
-   `Character`: no es un personaje, no se mueve ni reaparece). `_maxHealth`, `_currentHealth`, `IsDestroyed`;
-   `TakeDamage` con el mismo patrón que `Character` (guard, `-=`, `Mathf.Max`, log, una sola vez);
-   al destruirse: Debug.Log + feedback visual simple. Collider normal (no trigger) en el modelo `Generator_v1`.
-2. **Día 4, paso B — Abrir la salida:** evento C# en `Generator` (`public event System.Action<Generator> Destroyed`)
-   y `LevelExit` con `[SerializeField] Generator[] _generators` que se suscribe, cuenta los que quedan y al
-   llegar a 0 pone `_isOpen = true` y desactiva la barrera (`BloqueoCamino`). Patrón Observer.
-3. **Día 4, paso C — Centinela:** tanque enemigo quieto (`Enemy`), gira hacia el player en rango y dispara con
+1. **Día 5, paso A — Menú principal + pantalla de victoria (Marcos lo escribe con guía):**
+   - Escenas nuevas `MainMenu` y `Victory` en `Assets/Scenes`; UI con Canvas + Button (TextMeshPro).
+   - Script reutilizable `SceneLoader` con `public void LoadScene(string sceneName)` →
+     `SceneManager.LoadScene(sceneName)` (`using UnityEngine.SceneManagement;`). Los botones lo llaman desde
+     **On Click ()** pasando el nombre de la escena como parámetro.
+   - Scene List (File → Build Profiles): `MainMenu` en el índice 0, después `Scene1` y `Victory`.
+   - `LevelExit`: al completar, `SceneManager.LoadScene(_victorySceneName)` (`[SerializeField] string`).
+   - Sin botón "Salir": `Application.Quit()` no hace nada en WebGL.
+2. **Día 5, paso B — Primer build WebGL y subida a itch.io.**
+3. **Día 4, paso C — Centinela (solo si sobra tiempo):** tanque enemigo quieto (`Enemy`), gira hacia el player en rango y dispara con
    cooldown reutilizando `BulletController`/`BulletData` (ojo: la bala enemiga no debe chocar con su tirador).
 4. Ubicar enemigos custodiando los generadores y balancear.
 
