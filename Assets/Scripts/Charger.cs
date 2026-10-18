@@ -4,7 +4,7 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-06 23:54:38
- Last Modification Date: 2026-10-07 02:16:07
+ Last Modification Date: 2026-10-18 20:04:52
 
 */
 
@@ -17,6 +17,7 @@ public class Charger : Enemy
     [SerializeField] private float _moveSpeed = 4f;
     [SerializeField] private float _contactDamage = 20f;
     [SerializeField] private float _attackCooldown = 1f;
+    [SerializeField] private float _turnSpeed = 180f;
 
     private float _nextAttackTime;
     private Rigidbody _rb;
@@ -40,6 +41,10 @@ public class Charger : Enemy
         direction.y = 0f;
 
         direction = direction.normalized;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+        _rb.MoveRotation(Quaternion.RotateTowards(_rb.rotation, targetRotation, _turnSpeed * Time.deltaTime));
 
         _rb.linearVelocity = new Vector3(direction.x * _moveSpeed, _rb.linearVelocity.y, direction.z * _moveSpeed);
     }

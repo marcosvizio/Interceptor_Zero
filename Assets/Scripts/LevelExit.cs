@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class LevelExit : MonoBehaviour
 {
@@ -6,6 +7,8 @@ public class LevelExit : MonoBehaviour
     private bool _isOpen = false;
     [SerializeField] private GameObject _barriers;
     [SerializeField] private Generator[] _generators;
+    [SerializeField] private string _victorySceneName = "Victory";
+
 
     private int _remaining;
     private bool _levelCompleted;
@@ -71,6 +74,6 @@ public class LevelExit : MonoBehaviour
         if(!_isOpen) return;
         if(_levelCompleted) return;
         _levelCompleted = true;
-        Debug.Log("Nivel Completado!");
+        SceneManager.LoadScene(_victorySceneName);
     }
 }

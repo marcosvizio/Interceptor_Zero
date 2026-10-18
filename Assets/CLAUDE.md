@@ -125,11 +125,11 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [x] Generadores (destruir) y lógica para abrir la compuerta (evento `Destroyed` + `LevelExit`)
 - [ ] Enemigo Centinela (tanque enemigo quieto que apunta y dispara; reutiliza `BulletController`/`BulletData`)
 - [x] ~~Enemigo Patrullero~~ — descartado por ahora (2026-10-08)
-- [ ] Ubicar enemigos custodiando los generadores
+- [x] Ubicar enemigos custodiando los generadores (10 Chargers con modelo de tanque)
 
 ### Día 5 — Menú y primer build WebGL
-- [ ] Escena de menú con botón Play
-- [ ] Pantalla de victoria / fin de nivel
+- [x] Escena de menú con botón Play
+- [x] Pantalla de victoria / fin de nivel
 - [ ] **Primer build WebGL subido a itch.io** (detectar problemas a tiempo)
 
 ### Día 6 — Pooling y pulido (día liviano)
@@ -144,7 +144,8 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [ ] Entregar
 
 ## Estado actual
-_Última actualización: 2026-10-18 (Días 1, 2 y 3 completos; empieza el Día 4)._
+_Última actualización: 2026-10-18, fin de la sesión. Juego jugable de punta a punta (menú → nivel con 3
+generadores y 10 Chargers → victoria). Falta lo de entrega: build WebGL en itch.io, PDF y Drive._
 
 **ENTREGA: 2026-10-21.** Marcos quiere tener casi todo el 2026-10-18 (tiene otros TPs). Prioridad, en orden;
 si falta tiempo se recorta desde abajo:
@@ -241,17 +242,29 @@ En este documento el diseño puede seguir usando los nombres en español.
   - Detalles menores en `LevelExit`: `_remaining` cuenta también los huecos null del array; `Open()` no
     chequea `_barriers == null`; `_isOpen = true` repetido en `Start`; comentarios guía en `Open()`.
 
-### Próximo paso (empezar por acá)
-1. **Día 5, paso A — Menú principal + pantalla de victoria (Marcos lo escribe con guía):**
-   - Escenas nuevas `MainMenu` y `Victory` en `Assets/Scenes`; UI con Canvas + Button (TextMeshPro).
-   - Script reutilizable `SceneLoader` con `public void LoadScene(string sceneName)` →
-     `SceneManager.LoadScene(sceneName)` (`using UnityEngine.SceneManagement;`). Los botones lo llaman desde
-     **On Click ()** pasando el nombre de la escena como parámetro.
-   - Scene List (File → Build Profiles): `MainMenu` en el índice 0, después `Scene1` y `Victory`.
-   - `LevelExit`: al completar, `SceneManager.LoadScene(_victorySceneName)` (`[SerializeField] string`).
-   - Sin botón "Salir": `Application.Quit()` no hace nada en WebGL.
-2. **Día 5, paso B — Primer build WebGL y subida a itch.io.**
-3. **Día 4, paso C — Centinela (solo si sobra tiempo):** tanque enemigo quieto (`Enemy`), gira hacia el player en rango y dispara con
+- **Día 5, paso A (2026-10-18), hecho:** escenas `MainMenu` y `Victory` (Canvas + Button TMP + fondos
+  `Assets/UI/Backgrounds/*_BG.png` dibujados por Claude con código); `SceneLoader.LoadScene(string)` reutilizable
+  desde **On Click ()**; `LevelExit` carga `_victorySceneName` ("Victory") al completar. Sin botón Salir (WebGL).
+  `Packages/manifest.json` sumó `com.unity.2d.sprite` (lo agrega Unity al usar sprites).
+- Se restauraron desde el respaldo los modelos `WZ PAK/vehicles/armored carrier/*` (16 FBX, 5,5 MB; todos usan
+  el material compartido `al1`) para darle forma de tanque al Charger. Los que no se usen se pueden volver a quitar.
+
+- **Charger con forma de tanque (2026-10-18, fin de la sesión):** el prefab `Charger` usa el modelo
+  `apc_plaz2` (el Player usa `apc_b1`); `Behave()` rota con `Quaternion.LookRotation` + `RotateTowards` +
+  `_rb.MoveRotation` a `_turnSpeed`. Hay **10 Chargers** en la escena, ubicados por Marcos.
+  Menú, victoria, fondos y Charger commiteados y pusheados en `dev`.
+  Pendientes chicos del Charger: guard de `direction.sqrMagnitude` antes de `LookRotation` (warning si
+  queda encima del player) y Freeze Rotation **Y** en el Rigidbody (hoy solo X y Z: los choques lo pueden girar).
+  Los otros 14 modelos `apc_*` restaurados no se usan: se pueden volver a quitar.
+
+### Próximo paso (empezar por acá) — quedan 3 días para la entrega (21/10)
+1. **Día 5, paso B — Primer build WebGL y subida a itch.io (OBLIGATORIO, lo más urgente).**
+   Antes: pasar `dev` → `prod` → `main`. Revisar compresión (Gzip o Decompression Fallback), tamaño de
+   texturas (Max Size), probar en el navegador que el flujo Menú → Nivel → Victoria funcione.
+2. PDF (controles, desafío, links a Drive e itch.io) + subir el proyecto a Drive (sin `Library/`, `Temp/`,
+   `Logs/`, `.git/`).
+3. Object Pooling de balas (punto extra).
+4. **Día 4, paso C — Centinela (solo si sobra tiempo):** tanque enemigo quieto (`Enemy`), gira hacia el player en rango y dispara con
    cooldown reutilizando `BulletController`/`BulletData` (ojo: la bala enemiga no debe chocar con su tirador).
 4. Ubicar enemigos custodiando los generadores y balancear.
 

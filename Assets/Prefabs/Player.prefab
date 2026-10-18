@@ -1067,11 +1067,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94755d1bc7a6d4a4eab37aaf4214f7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  _maxHealth: 100
   _speed: 5
   _rotationSpeed: 10
   _gravity: -9.81
   _bulletPrefab: {fileID: 2935876452709508838, guid: 4d6bcec417a22c44fafda34482e69d85, type: 3}
   _shootPoint: {fileID: 5374157301042971096}
+  _spawnPoint: {fileID: 0}
 --- !u!1 &8878610351396254368
 GameObject:
   m_ObjectHideFlags: 0
