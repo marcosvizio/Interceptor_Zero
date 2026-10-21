@@ -144,8 +144,8 @@ Regla: si algo se atrasa, se recorta pulido, nunca los requisitos obligatorios.
 - [ ] Entregar
 
 ## Estado actual
-_Última actualización: 2026-10-18, fin de la sesión. Juego jugable de punta a punta (menú → nivel con 3
-generadores y 10 Chargers → victoria). Falta lo de entrega: build WebGL en itch.io, PDF y Drive._
+_Última actualización: 2026-10-21. **Trabajo entregado** (ver "ENTREGADO" más abajo). Juego jugable de
+punta a punta: menú → nivel con 3 generadores y 10 Chargers → victoria._
 
 **ENTREGA: 2026-10-21.** Marcos quiere tener casi todo el 2026-10-18 (tiene otros TPs). Prioridad, en orden;
 si falta tiempo se recorta desde abajo:
@@ -257,16 +257,24 @@ En este documento el diseño puede seguir usando los nombres en español.
   queda encima del player) y Freeze Rotation **Y** en el Rigidbody (hoy solo X y Z: los choques lo pueden girar).
   Los otros 14 modelos `apc_*` restaurados no se usan: se pueden volver a quitar.
 
-### Próximo paso (empezar por acá) — quedan 3 días para la entrega (21/10)
-1. **Día 5, paso B — Primer build WebGL y subida a itch.io (OBLIGATORIO, lo más urgente).**
-   Antes: pasar `dev` → `prod` → `main`. Revisar compresión (Gzip o Decompression Fallback), tamaño de
-   texturas (Max Size), probar en el navegador que el flujo Menú → Nivel → Victoria funcione.
-2. PDF (controles, desafío, links a Drive e itch.io) + subir el proyecto a Drive (sin `Library/`, `Temp/`,
-   `Logs/`, `.git/`).
-3. Object Pooling de balas (punto extra).
-4. **Día 4, paso C — Centinela (solo si sobra tiempo):** tanque enemigo quieto (`Enemy`), gira hacia el player en rango y dispara con
-   cooldown reutilizando `BulletController`/`BulletData` (ojo: la bala enemiga no debe chocar con su tirador).
-4. Ubicar enemigos custodiando los generadores y balancear.
+### ✅ ENTREGADO (2026-10-21)
+- Build WebGL en itch.io: https://marcosvizio.itch.io/interceptor-zero (Gzip + Decompression Fallback,
+  Scene List MainMenu → Scene1 → Victory; probado en incógnito).
+- En Drive (el profesor recibe un `.txt` con el link): PDF + link de itch.io + `.unitypackage` (exportado
+  sin `CLAUDE.md`). El PDF está en `Docs/Interceptor_Zero.pdf` (armado desde `Docs/Interceptor_Zero.html`
+  con Edge headless).
+- El profesor recién lo ve el fin de semana (25-26/10): se puede **actualizar el Drive y el build** hasta entonces.
+- Pendiente de Git: commitear el PDF y los ajustes de build (ProjectSettings, Settings) y pasar
+  `dev` → `prod` → `main` para que `prod` quede igual a lo entregado.
+
+### Mejoras opcionales antes del fin de semana (si hay tiempo, en este orden)
+1. **Object Pooling de balas** (punto extra de la consigna): reutilizar misiles en lugar de `Instantiate`/`Destroy`.
+2. Pendientes chicos del Charger: guard de `direction.sqrMagnitude` antes de `LookRotation` y Freeze Rotation Y.
+3. **Centinela:** tanque enemigo quieto (`Enemy`) que gira hacia el player en rango y dispara con cooldown
+   reutilizando `BulletController`/`BulletData` (ojo: la bala enemiga no debe chocar con su tirador).
+4. Feedback: UI de vida, sonido, partículas.
+Si se cambia algo: nuevo build a itch.io, nuevo `.unitypackage` (sin `CLAUDE.md`) y actualizar el PDF si
+cambian controles, enemigos o consignas cumplidas (por ejemplo, sumar Object Pooling).
 
 ### Pendientes menores
 - Convención de nombres en `BulletData`: los campos públicos usan `_` (`_speed`, `_damage`) y `bulletPrefab` no.

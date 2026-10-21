@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Interceptor Zero — Programación de Videojuegos 2</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 18mm 16mm; }
+  :root { --ink: #1d2118; --muted: #5b6152; --accent: #d9a400; --olive: #4e5c34; --line: #d8dccf; --soft: #f4f5ef; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: var(--ink); font-size: 10pt; line-height: 1.4; }
+  .cover { position: relative; border-radius: 10px; overflow: hidden; height: 50mm; margin-bottom: 4mm; }
+  .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cover .title { position: absolute; left: 9mm; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; color: #fff; }
+  .cover h1 { margin: 0; font-size: 30pt; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); line-height: 1.05; }
+  .cover .sub { margin-top: 3mm; font-size: 12pt; opacity: .95; }
+  .cover .meta { margin-top: 1.5mm; font-size: 10pt; opacity: .8; }
+  h2 { break-after: avoid; font-size: 13pt; margin: 4.5mm 0 2mm; padding-bottom: 1.5mm; border-bottom: 2px solid var(--accent); color: var(--olive); }
+  h3 { font-size: 11pt; margin: 4mm 0 1.5mm; }
+  p { margin: 0 0 2.5mm; }
+  ul { margin: 0 0 2.5mm; padding-left: 5mm; }
+  li { margin-bottom: 1mm; }
+  .play { display: flex; align-items: center; gap: 4mm; background: var(--soft); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 3.5mm 4.5mm; }
+  .play .label { font-weight: 600; white-space: nowrap; }
+  .play a { color: var(--olive); font-weight: 600; font-size: 11.5pt; text-decoration: none; }
+  table { width: 100%; border-collapse: collapse; margin: 1mm 0 3mm; }
+  th, td { text-align: left; padding: 1.5mm 3mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--soft); font-size: 9.5pt; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  kbd { display: inline-block; min-width: 7mm; text-align: center; padding: .6mm 2mm; border: 1px solid #b9bfae; border-bottom-width: 2px; border-radius: 4px; background: #fff; font-family: inherit; font-weight: 600; font-size: 9.5pt; }
+  .steps { counter-reset: s; list-style: none; padding: 0; }
+  .steps li { counter-increment: s; position: relative; padding-left: 9mm; margin-bottom: 2mm; }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: .2mm; width: 6mm; height: 6mm; border-radius: 50%; background: var(--olive); color: #fff; font-size: 9pt; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .map { display: flex; gap: 5mm; align-items: flex-start; }
+  .map img { width: 70mm; border-radius: 6px; border: 1px solid var(--line); }
+  .legend { flex: 1; }
+  .dot { display: inline-block; width: 3.2mm; height: 3.2mm; border-radius: 50%; border: 2px solid; vertical-align: -0.5mm; margin-right: 1.5mm; }
+  .check td:first-child { width: 7mm; color: var(--olive); font-weight: 700; }
+  code { font-family: Consolas, monospace; font-size: 9.5pt; background: var(--soft); padding: .2mm 1.2mm; border-radius: 3px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .page-break { break-before: page; }
+  table, .map, .two, .steps li, .play { break-inside: avoid; }
+  td.nowrap { white-space: nowrap; }
+  .small { font-size: 9.5pt; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <img src="../Assets/UI/Backgrounds/MainMenu_BG.png" alt="">
+  <div class="title">
+    <h1>Interceptor<br>Zero</h1>
+    <div class="sub">Trabajo práctico de medio término · Programación de Videojuegos 2</div>
+    <div class="meta">Marcos Vizio · 21 de octubre de 2026</div>
+  </div>
+</div>
+
+<div class="play">
+  <span class="label">Jugar en el navegador (WebGL):</span>
+  <a href="https://marcosvizio.itch.io/interceptor-zero">https://marcosvizio.itch.io/interceptor-zero</a>
+</div>
+<p class="small" style="margin-top:2mm">Los archivos del proyecto (<code>.unitypackage</code>) están en la misma carpeta de Drive que este documento.</p>
+
+<h2>El juego</h2>
+<p>Manejás un tanque que tiene que abrirse paso por una base industrial enemiga y escapar. La salida está bloqueada por una barrera que se alimenta de <strong>3 generadores</strong> repartidos por el mapa, cada uno custodiado por tanques enemigos. Para escapar hay que destruir los tres y llegar a la salida.</p>
+
+<h2>Controles</h2>
+<table>
+  <tr><th style="width:38%">Tecla</th><th>Acción</th></tr>
+  <tr><td><kbd>W</kbd> / <kbd>S</kbd></td><td>Avanzar / retroceder en la dirección hacia donde mira el tanque.</td></tr>
+  <tr><td><kbd>A</kbd> / <kbd>D</kbd></td><td>Girar el tanque a la izquierda / derecha sobre su eje.</td></tr>
+  <tr><td><kbd>Click izquierdo</kbd></td><td>Disparar. El cañón es fijo y apunta hacia adelante: para apuntar hay que girar el tanque.</td></tr>
+</table>
+<p class="small">Si el teclado no responde en el navegador, hacé click una vez dentro del juego para darle el foco.</p>
+
+<h2>El desafío</h2>
+<ol class="steps">
+  <li><strong>Inicio:</strong> el tanque aparece en el punto de inicio, abajo a la izquierda del mapa.</li>
+  <li><strong>Destruir los 3 generadores:</strong> cada uno resiste 5 disparos y queda apagado (negro) al destruirlo, así se ve cuáles faltan. Se pueden destruir en <strong>cualquier orden</strong>.</li>
+  <li><strong>Esquivar o destruir a los enemigos</strong> que custodian cada generador (ver abajo).</li>
+  <li><strong>Escapar:</strong> al caer el tercer generador desaparece la barrera de la salida (arriba a la derecha). Al cruzarla se termina el nivel y aparece la pantalla de victoria.</li>
+</ol>
+<p><strong>Si el tanque es destruido</strong>, reaparece en el punto de inicio con la vida completa. Los generadores que ya destruiste siguen destruidos: el progreso no se pierde.</p>
+
+<div class="page-break"></div>
+<h2 style="margin-top:0">Enemigos: Charger (tanque de embestida)</h2>
+<p>Hay <strong>10 Chargers</strong> custodiando los generadores. Cada uno vigila un radio alrededor suyo: cuando el jugador entra en ese radio, gira hacia él y lo persigue; si lo toca, le hace daño por contacto mientras sigan en contacto. Si el jugador se aleja lo suficiente, el Charger se detiene. Son un poco más lentos que el jugador, así que se les puede escapar, y los árboles y edificios sirven de cobertura.</p>
+<table>
+  <tr><th></th><th>Vida</th><th>Detalles</th></tr>
+  <tr><td>Jugador</td><td>100</td><td>Velocidad 5 · dispara proyectiles de 20 de daño</td></tr>
+  <tr><td>Charger</td><td class="nowrap">60 (3 disparos)</td><td>Velocidad 4 · detecta a 10 unidades · 20 de daño por segundo de contacto</td></tr>
+  <tr><td>Generador</td><td class="nowrap">100 (5 disparos)</td><td>No ataca · al destruirse avisa a la salida</td></tr>
+</table>
+
+
+
+<h2>Mapa del nivel</h2>
+<div class="map">
+  <img src="Nivel%20Final.png" alt="Vista superior del nivel">
+  <div class="legend">
+    <p><span class="dot" style="border-color:#21a33a"></span><strong>Inicio</strong> (abajo a la izquierda, sobre el camino).</p>
+    <p><span class="dot" style="border-color:#e6b800"></span><strong>Salida</strong> (arriba a la derecha), bloqueada hasta destruir los 3 generadores.</p>
+    <p>En el centro hay una zona abierta con árboles; alrededor, caminos, hangares y edificios industriales que bloquean el paso y sirven de cobertura.</p>
+    <p class="small">El nivel se diseñó primero en papel (boceto con escala de 1 cuadrado = 2 unidades) y después se armó y se ajustó jugándolo en Unity.</p>
+  </div>
+</div>
+
+<h2>Consignas</h2>
+<table class="check">
+  <tr><td>✔</td><td><strong>Vista top view:</strong> cámara cenital que sigue al tanque.</td></tr>
+  <tr><td>✔</td><td><strong>Pantalla de inicio con botón Play.</strong></td></tr>
+  <tr><td>✔</td><td><strong>Desafío:</strong> destruir los 3 generadores para abrir la salida (no alcanza solo con pelear).</td></tr>
+  <tr><td>✔</td><td><strong>Batalla contra al menos 3 enemigos:</strong> 10 Chargers.</td></tr>
+  <tr><td>✔</td><td><strong>Avatares no humanoides:</strong> el jugador y los enemigos son vehículos blindados.</td></tr>
+  <tr><td>✔</td><td><strong>Lugar de inicio</strong> donde aparece el jugador.</td></tr>
+  <tr><td>✔</td><td><strong>Fin del nivel:</strong> al cruzar la salida aparece la pantalla de victoria.</td></tr>
+  <tr><td>✔</td><td><strong>Reaparición:</strong> al morir, el tanque vuelve al punto de inicio.</td></tr>
+</table>
+
+<div class="page-break"></div>
+<h2 style="margin-top:0">Datos técnicos</h2>
+<div class="two">
+  <div>
+    <h3>Abrir el proyecto</h3>
+    <ol class="steps">
+      <li>Crear un proyecto <strong>Unity 6000.3.15f1</strong> con la plantilla <strong>Universal 3D (URP)</strong>.</li>
+      <li><strong>Assets → Import Package → Custom Package</strong> y elegir el <code>.unitypackage</code>.</li>
+      <li>En <strong>File → Build Profiles → Scene List</strong>, agregar las escenas en este orden: <code>MainMenu</code>, <code>Scene1</code>, <code>Victory</code> (el package no incluye esta lista).</li>
+      <li>Abrir <code>Assets/Scenes/MainMenu</code> y darle Play.</li>
+    </ol>
+  </div>
+  <div>
+    <h3>Scripts principales</h3>
+    <ul>
+      <li><code>Character</code> (abstracta): vida, daño y muerte. De ella heredan <code>PlayerController</code> y <code>Enemy</code> → <code>Charger</code>.</li>
+      <li><code>IDamagable</code>: interfaz de todo lo que recibe daño (personajes y <code>Generator</code>).</li>
+      <li><code>Generator</code> avisa con un evento al destruirse; <code>LevelExit</code> los cuenta y abre la salida (patrón Observer).</li>
+      <li><code>BulletController</code> + <code>BulletData</code> (ScriptableObject): proyectiles.</li>
+      <li><code>CameraFollow</code>, <code>SceneLoader</code>: cámara y cambio de escenas.</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Assets utilizados</h3>
+<p class="small">Unity Asset Store: <em>Simple Nature Pack</em> (árboles, rocas, suelo), <em>RPG/FPS Game Assets – Industrial</em> (edificios, hangares, contenedores, vallas, barriles, caminos, generadores), <em>WZ PAK</em> (modelos de vehículos blindados del jugador y los enemigos), <em>BTM Rockets, Missiles &amp; Bombs</em> (proyectil) y <em>PBS Materials Variety Pack</em> (un material). Los fondos del menú y de la pantalla de victoria fueron generados por código.</p>
+
+</body>
+</html>
