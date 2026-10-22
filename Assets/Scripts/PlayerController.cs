@@ -4,7 +4,7 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-01 21:33:23
- Last Modification Date: 2026-10-07 20:51:27
+ Last Modification Date: 2026-10-22 14:00:44
 
 */
 
@@ -21,9 +21,10 @@ public class PlayerController : Character
     [SerializeField] private float _speed = 5f;
     [SerializeField] private float _rotationSpeed = 120f;
     [SerializeField] private float _gravity = -9.81f;
-    [SerializeField] private GameObject _bulletPrefab;
+    [SerializeField] private BulletPool _bulletPool;
     [SerializeField] private Transform _shootPoint;
     [SerializeField] private Transform _spawnPoint;
+    private BulletController bullet;
 
     protected override void Awake()
     {
@@ -58,23 +59,14 @@ public class PlayerController : Character
 
     void Shoot()
     {
-        // Si falta asignar algo en el Inspector, avisamos en vez de tirar NullReferenceException.
-        if (_bulletPrefab == null || _shootPoint == null)
+        if (_bulletPool == null || _shootPoint == null)
         {
             Debug.LogError($"{name}: falta asignar Bullet Prefab o Shoot Point en el Inspector.", this);
             return;
         }
 
-        // Rotación final = rotación del punto de disparo * rotación propia del prefab.
-        // Así la bala mira hacia donde apunta el cañón y además conserva la rotación
-        // que tenga el root del prefab (por ejemplo los 90° en X del Misil).
-        // Con Quaternion.identity esa rotación del prefab se perdía.
-        Quaternion rotation = _shootPoint.rotation * _bulletPrefab.transform.rotation;
+        bullet = _bulletPool.Get(_shootPoint.position, _shootPoint.rotation);
 
-        GameObject bullet = Instantiate(_bulletPrefab, _shootPoint.position, rotation);
-
-        // La bala nace pegada al tanque: le decimos a la física que ignore el choque
-        // entre la bala y el collider del Player, si no se destruiría apenas sale.
         if (bullet.TryGetComponent(out Collider bulletCollider))
         {
             Physics.IgnoreCollision(bulletCollider, _characterController);

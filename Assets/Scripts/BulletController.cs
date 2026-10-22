@@ -16,6 +16,7 @@ public class BulletController : MonoBehaviour
     // Valores que usa ESTA bala en particular. Se cargan en Launch() según el tipo elegido.
     private float _speed;
     private float _damage;
+    private BulletPool _pool;
 
     private Rigidbody _rb;
 
@@ -28,38 +29,51 @@ public class BulletController : MonoBehaviour
         _rb = GetComponent<Rigidbody>();
     }
 
-    // Start se ejecuta DESPUÉS de Launch() (Unity lo llama antes del primer frame del objeto).
-    // Por eso acá NO se tocan _speed ni _damage: pisaríamos lo que configuró Launch().
-    void Start()
+    public void SetPool(BulletPool pool)
     {
-        // Programa la destrucción de la bala dentro de _lifeTime segundos.
-        Destroy(gameObject, _lifeTime);
+        _pool = pool;
     }
 
+    private void ReturnToPool()
+    {
+        if (!gameObject.activeSelf)
+        {
+            return;
+        }
+        if (!_pool)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        _pool.Return(this);
+    }
 
-    // La llama quien dispara (por ejemplo el PlayerController) justo después de instanciar la bala.
-    // direction: hacia dónde sale la bala.
-    // bulletType: 0 = normal, 1 = pesada, 2 = explosiva.
+    void OnEnable()
+    {
+        Invoke(nameof(ReturnToPool), _lifeTime);
+    }
+
+    void OnDisable()
+    {
+        CancelInvoke();
+    }
+
     public void Launch(Vector3 direction, int bulletType = 0)
     {
+        _rb.angularVelocity = Vector3.zero;
+        _rb.linearVelocity = Vector3.zero;
         BulletData data = GetBulletData(bulletType);
-
-        // Si no hay datos asignados en el Inspector, avisamos con un error claro
-        // en vez de disparar una bala con velocidad 0 que no se mueve.
+    
         if (data == null)
         {
             Debug.LogError($"{name}: falta asignar el BulletData para el tipo {bulletType} en el Inspector.", this);
-            Destroy(gameObject);
+            ReturnToPool();
             return;
         }
 
         _speed = data._speed;
         _damage = data._damage;
 
-        // linearVelocity ya está en unidades por segundo: el motor de física aplica el tiempo
-        // por su cuenta, así que NO hay que multiplicar por Time.deltaTime ni fixedDeltaTime.
-        // Normalizamos la dirección para que la velocidad sea siempre _speed,
-        // sin importar el largo del vector que nos pasen.
         _rb.linearVelocity = direction.normalized * _speed;
     }
 
@@ -83,14 +97,12 @@ public class BulletController : MonoBehaviour
     // Unity la llama sola cuando el collider de la bala choca con otro collider.
     private void OnCollisionEnter(Collision collision)
     {
-        // Si lo que golpeamos puede recibir daño (implementa IDamagable), se lo aplicamos.
         if (collision.gameObject.TryGetComponent<IDamagable>(out IDamagable damagable))
         {
             damagable.TakeDamage(_damage);
         }
 
-        // Pegue en lo que pegue (enemigo, pared, suelo), la bala desaparece.
-        Destroy(gameObject);
+        ReturnToPool();
     }
 
 }
