@@ -1,3 +1,13 @@
+/*
+
+ Author: Marcos Vizio
+ Email: marcosfvizio@gmail.com
+
+ Creation Date: 2026-10-21 19:29:50
+ Last Modification Date: 2026-10-21 22:35:24
+
+*/
+
 using UnityEngine;
 
 [RequireComponent(typeof(MeshRenderer))]

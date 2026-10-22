@@ -4,58 +4,53 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-06 23:54:38
- Last Modification Date: 2026-10-18 20:04:52
+ Last Modification Date: 2026-10-21 21:11:22
 
 */
 
 using UnityEngine;
+using UnityEngine.AI;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(NavMeshAgent))]
 public class Charger : Enemy
 {
 
     [SerializeField] private float _moveSpeed = 4f;
     [SerializeField] private float _contactDamage = 20f;
     [SerializeField] private float _attackCooldown = 1f;
-    [SerializeField] private float _turnSpeed = 180f;
-
     private float _nextAttackTime;
-    private Rigidbody _rb;
+    private NavMeshAgent _agent;
 
     protected override void Awake()
     {
         base.Awake();
-        _rb = GetComponent<Rigidbody>();
+        _agent = GetComponent<NavMeshAgent>();
+        _agent.speed = _moveSpeed;
     }
     
     protected override void Behave()
     {
+
+        if (!_agent.isOnNavMesh) return;
+
         if (!IsPlayerInRange())
         {
-            _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
+            _agent.isStopped = true;
             return;
         }
         
-        Vector3 direction = _player.position - transform.position;
-
-        direction.y = 0f;
-
-        direction = direction.normalized;
-
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
-
-        _rb.MoveRotation(Quaternion.RotateTowards(_rb.rotation, targetRotation, _turnSpeed * Time.deltaTime));
-
-        _rb.linearVelocity = new Vector3(direction.x * _moveSpeed, _rb.linearVelocity.y, direction.z * _moveSpeed);
+        _agent.isStopped = false;
+        _agent.SetDestination(_player.position);
+        
     }
 
-    void OnCollisionStay(Collision collision)
+    void OnTriggerStay(Collider other)
     {
-        if (!collision.gameObject.CompareTag("Player")) return;
+        if (!other.CompareTag("Player")) return;
 
         if (_nextAttackTime >= Time.time) return;
 
-        if (collision.gameObject.TryGetComponent<IDamagable>(out IDamagable damagable))
+        if (other.TryGetComponent<IDamagable>(out IDamagable damagable))
         {
             damagable.TakeDamage(_contactDamage);
         }

@@ -267,6 +267,37 @@ En este documento el diseño puede seguir usando los nombres en español.
 - Pendiente de Git: commitear el PDF y los ajustes de build (ProjectSettings, Settings) y pasar
   `dev` → `prod` → `main` para que `prod` quede igual a lo entregado.
 
+- Commit `15da048` (entrega): `dev`, `prod` y `main` sincronizadas.
+
+### Estudio post-entrega: Charger con NavMesh (2026-10-21, en curso)
+Marcos sigue usando el proyecto para aprender. Trabajar en una rama `navmesh` creada desde `dev`;
+mergear a `dev` solo si funciona (y a `prod`/`main` solo si se decide reentregar).
+- Paquete `com.unity.ai.navigation` 2.0.12 ya está en el manifest.
+- `NavMeshSurface` en un objeto del nivel (Use Geometry: Physics Colliders); Player y Chargers excluidos
+  del bake con `NavMeshModifier` → **Mode: Remove Object** (en AI Navigation 2.x reemplaza al viejo "Ignore From Build"); Agent Type propio ("Tank", radio ~1.5).
+- `Charger`: `NavMeshAgent` (`RequireComponent`), `_agent.speed = _moveSpeed` en `Awake`; en rango →
+  `isStopped = false` + `SetDestination(_player.position)`; fuera de rango → `isStopped = true`;
+  guard `_agent.isOnNavMesh`. Se borra la rotación manual (el agent rota con Angular Speed).
+- El Rigidbody pasa a **Is Kinematic** (si no, la física y el agent se pelean). Con kinematic,
+  `OnCollisionStay` contra el `CharacterController` deja de llamarse → el daño por contacto pasa a un
+  **trigger** hijo (SphereCollider Is Trigger) + `OnTriggerStay(Collider other)` en `Charger` (el mensaje
+  llega al objeto del Rigidbody). Las balas siguen dañándolo (son Rigidbody dinámico).
+- Estado (2026-10-21): `Charger.cs` con `NavMeshAgent` funciona (persigue y daña por trigger). Problemas
+  encontrados: el **único** BoxCollider del root quedó en **Is Trigger** (por eso atraviesa al Player y
+  las balas no lo pueden chocar) → volverlo sólido y crear un hijo `ContactTrigger` aparte. El agent ignora
+  colliders que no son agentes → `Stopping Distance` ~ distancia de contacto. Se hunde en el suelo porque
+  el pivot del root está por encima de la base del tanque → `Base Offset`. El root tiene escala 0.346, así
+  que Radius/Height/Base Offset del agent y los tamaños de collider están en unidades locales (se escalan).
+  Arreglado por Marcos: collider del root sólido + hijo `ContactTrigger`, Stopping Distance 3, Base Offset 1.2.
+- **Incidente de materiales (2026-10-21):** al importar el pack `RPGPP_LT` se corrió una conversión de
+  materiales a **URP 2D** que pasó los 25 materiales del proyecto de `URP/Simple Lit` a
+  `Mesh2D-Lit-Default` (ignora `material.color`: el generador dejó de ponerse negro). Claude restauró los
+  25 `.mat` con `git restore` (copia de los convertidos en el scratchpad de la sesión). Los 3 materiales de
+  `RPGPP_LT` (untracked) siguen en el shader 2D: pasarlos a mano a `Universal Render Pipeline/Lit`.
+  **Nunca usar la conversión a 2D en este proyecto** (es 3D): para materiales rosados usar
+  Window → Rendering → Render Pipeline Converter → *Built-in to URP* → Material Upgrade.
+- El prefab `Generador` tiene un hijo `ContactTrigger` (trigger) que parece agregado por error: no hace falta.
+
 ### Mejoras opcionales antes del fin de semana (si hay tiempo, en este orden)
 1. **Object Pooling de balas** (punto extra de la consigna): reutilizar misiles en lugar de `Instantiate`/`Destroy`.
 2. Pendientes chicos del Charger: guard de `direction.sqrMagnitude` antes de `LookRotation` y Freeze Rotation Y.
