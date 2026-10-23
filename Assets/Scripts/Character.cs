@@ -4,20 +4,21 @@
  Email: marcosfvizio@gmail.com
 
  Creation Date: 2026-10-06 23:53:54
- Last Modification Date: 2026-10-07 19:24:32
+ Last Modification Date: 2026-10-23 00:32:34
 
 */
 
 using UnityEngine;
 
-public abstract class Character : MonoBehaviour, IDamagable
+public abstract class Character : MonoBehaviour, IDamagable, IHealth
 {
 
     [SerializeField] protected float _maxHealth = 100f;
     protected float _currentHealth;
-
-    
+    public float CurrentHealth => _currentHealth;
+    public float MaxHealth => _maxHealth;
     public bool IsDead { get; private set; }
+    public event System.Action<float, float> HealthChanged;
 
     protected virtual void Awake()
     {
@@ -32,6 +33,8 @@ public abstract class Character : MonoBehaviour, IDamagable
 
         _currentHealth = Mathf.Max(0f, _currentHealth);
 
+        HealthChanged?.Invoke(_currentHealth, _maxHealth);
+
         Debug.Log($"{name} recibió {damage} de daño. Vida: {_currentHealth}/{_maxHealth}");
 
         if(_currentHealth <= 0)
@@ -44,6 +47,7 @@ public abstract class Character : MonoBehaviour, IDamagable
     protected void ResetHealth()
     {
         _currentHealth = _maxHealth;
+        HealthChanged?.Invoke(_currentHealth, _maxHealth);
         IsDead = false;
     }
 

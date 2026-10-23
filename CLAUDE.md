@@ -66,9 +66,13 @@ Detalles y comandos: skill `git-flujo`. `prod`/`main` están en la entrega (`15d
    `Invoke` en `OnEnable` + `CancelInvoke` en `OnDisable`; `PlayerController` usa `_bulletPool.Get(...)`.
    Prefab `Misil` rehecho con el modelo `RMB_21` (Capsule Collider en el root, Continuous Dynamic).
 2. **UI** (en partes, rama `ui`):
-   - A: interfaz `IHealth` (`CurrentHealth`, `MaxHealth`, `event System.Action<float, float> HealthChanged`)
-     implementada por `Character`; script reutilizable `HealthBar` (busca `IHealth` con `GetComponent`,
-     se suscribe en `OnEnable`, lee el valor inicial en `Start`, `Image` tipo Filled); HUD del Player.
+   - ✅ A (2026-10-23): interfaz `IHealth` (`CurrentHealth`, `MaxHealth`, `event System.Action<float, float>
+     HealthChanged`) implementada por `Character` (invoca en `TakeDamage` y `ResetHealth`); script reutilizable
+     `HealthBar` (`[SerializeField] GameObject _target` + `GetComponent<IHealth>()` en `Awake`, `+=`/`-=` en
+     `OnEnable`/`OnDisable`, valor inicial en `Start`, `Image` Filled); Canvas `HUD` en `Scene1` con la barra del Player.
+   - B (siguiente): prefab `WorldHealthBar` (Canvas World Space + `HealthBar` + `Billboard` en `LateUpdate`)
+     anidado en los prefabs `Charger` y `Generador`; `Generator` implementa `IHealth`. Ojo: no apagar el
+     objeto que tiene el `HealthBar` para ocultarlo (se desuscribe en `OnDisable`): usar `CanvasGroup.alpha`.
    - B: `Generator` implementa `IHealth`; barras world-space sobre enemigos y generadores (mirando a cámara).
    - C: contador de generadores (evento en `LevelExit`). D: flecha estilo *Crazy Taxi* al generador vivo
      más cercano.
