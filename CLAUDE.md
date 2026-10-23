@@ -75,8 +75,10 @@ Detalles y comandos: skill `git-flujo`. `prod`/`main` están en la entrega (`15d
      + `BillBoard` que copia la rotación de la cámara en `LateUpdate`) anidado en `Charger` y `Generador`;
      `Generator` implementa `IHealth`. Ojo: no apagar el objeto que tiene el `HealthBar` para ocultarlo
      (se desuscribe en `OnDisable`): usar `CanvasGroup.alpha`.
-     Pendiente chico: en `HealthBar.Awake` el `GetComponent` está antes del guard de `_target` (NRE si falta).
-   - C (siguiente): contador de generadores (evento en `LevelExit`). D: flecha estilo *Crazy Taxi* al
+   - ✅ C (2026-10-23): `LevelExit` cuenta `_total` (sin huecos null) y publica `GeneratorsChanged(destruidos, total)`
+     en `Start` y al destruir uno; `GeneratorCounterUI` (TMP en el HUD, arriba a la derecha) se suscribe en `OnEnable`
+     y muestra "Generadores: x/3" o "¡Salida abierta!". Cadena de eventos Generator → LevelExit → UI.
+   - D (siguiente): flecha 3D estilo *Crazy Taxi* sobre el tanque que apunta al
      generador vivo más cercano.
 3. **Centinela** (`Sentry : Enemy`): tanque quieto que gira hacia el player en rango y dispara con cooldown,
    usando un pool de balas propio; su bala no debe dañarlo a él ni a otros enemigos.

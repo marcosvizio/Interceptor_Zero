@@ -11,7 +11,10 @@ public class LevelExit : MonoBehaviour
 
 
     private int _remaining;
+    private int _total;
     private bool _levelCompleted;
+
+    public event System.Action<int, int> GeneratorsChanged;
 
     void Start()
     {
@@ -27,16 +30,20 @@ public class LevelExit : MonoBehaviour
             _remaining++;
         }
 
+        _total = _remaining;
+
         if (_remaining <= 0)
         {
             Open();
-        } 
+        }
+
+        NotifyGeneratorsChanged(); 
     }
 
     void OnGeneratorDestroyed()
     {
         _remaining -= 1;
-        Debug.Log($"Quedan {_remaining} generadores por romper.");
+        NotifyGeneratorsChanged();
         if (_remaining <= 0)
         {
             Open();
@@ -75,5 +82,11 @@ public class LevelExit : MonoBehaviour
         if(_levelCompleted) return;
         _levelCompleted = true;
         SceneManager.LoadScene(_victorySceneName);
+    }
+
+    private void NotifyGeneratorsChanged()
+    {
+        int destroyed = _total - _remaining;
+        GeneratorsChanged?.Invoke(destroyed, _total);
     }
 }

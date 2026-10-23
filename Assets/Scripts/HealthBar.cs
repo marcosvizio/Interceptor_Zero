@@ -9,10 +9,15 @@ public class HealthBar : MonoBehaviour
 
     void Awake()
     {
-        _health = _target.GetComponent<IHealth>();
-        if (_target == null || _health == null)
+        if (_target == null)
         {
             Debug.LogError("No hay _target en HealthBar");
+            return;
+        }
+        _health = _target.GetComponent<IHealth>();
+        if (_health == null)
+        {
+            Debug.LogError("No hay IHealth en _target");
             return;
         }
     }
