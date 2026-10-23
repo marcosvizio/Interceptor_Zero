@@ -30,14 +30,15 @@ Historial día por día y detalles de la entrega: `Docs/HISTORIAL.md` (leerlo so
 ## Arquitectura (scripts en `Assets/Scripts/`)
 | Script | Rol |
 |---|---|
-| `Character` (abstract, `IDamagable`) | vida, `TakeDamage` (guard `IsDead`), `ResetHealth()`, `abstract Die()` |
+| `Character` (abstract, `IDamagable`, `IHealth`) | vida, `TakeDamage` (guard `IsDead`), `ResetHealth()`, `abstract Die()` |
 | `PlayerController : Character` | movimiento, disparo, respawn |
 | `Enemy : Character` (abstract) | busca al Player por tag, `IsPlayerInRange()`, `Update` → `abstract Behave()` (Template Method), gizmo de rango |
 | `Charger : Enemy` | persecución con NavMesh + daño por contacto |
-| `Generator : MonoBehaviour, IDamagable` | vida propia, evento `Destroyed`, se pone negro con `.material` |
+| `Generator : MonoBehaviour, IDamagable, IHealth` | vida propia, evento `Destroyed`, se pone negro con `.material` |
 | `LevelExit` | cuenta generadores, abre barrera, carga la victoria |
 | `BulletController` / `BulletData` | proyectil / datos de cada tipo de bala |
 | `BulletPool` | Object Pooling de balas (`Get` / `Return`), un objeto en la escena |
+| `IHealth` / `HealthBar` / `BillBoard` | interfaz de vida / barra reutilizable (HUD y world-space) / mirar a cámara |
 | `CameraFollow` (lo escribió Claude), `SceneLoader` | cámara top-down con `SmoothDamp` / cambio de escenas |
 | `Editor/SnapToGroundEditor` | herramienta: alinear objetos al suelo (no entra al build) |
 
@@ -70,12 +71,13 @@ Detalles y comandos: skill `git-flujo`. `prod`/`main` están en la entrega (`15d
      HealthChanged`) implementada por `Character` (invoca en `TakeDamage` y `ResetHealth`); script reutilizable
      `HealthBar` (`[SerializeField] GameObject _target` + `GetComponent<IHealth>()` en `Awake`, `+=`/`-=` en
      `OnEnable`/`OnDisable`, valor inicial en `Start`, `Image` Filled); Canvas `HUD` en `Scene1` con la barra del Player.
-   - B (siguiente): prefab `WorldHealthBar` (Canvas World Space + `HealthBar` + `Billboard` en `LateUpdate`)
-     anidado en los prefabs `Charger` y `Generador`; `Generator` implementa `IHealth`. Ojo: no apagar el
-     objeto que tiene el `HealthBar` para ocultarlo (se desuscribe en `OnDisable`): usar `CanvasGroup.alpha`.
-   - B: `Generator` implementa `IHealth`; barras world-space sobre enemigos y generadores (mirando a cámara).
-   - C: contador de generadores (evento en `LevelExit`). D: flecha estilo *Crazy Taxi* al generador vivo
-     más cercano.
+   - ✅ B (2026-10-23, commit `75e05b4`, en `dev`): prefab `WorldHealthBar` (Canvas World Space + `HealthBar`
+     + `BillBoard` que copia la rotación de la cámara en `LateUpdate`) anidado en `Charger` y `Generador`;
+     `Generator` implementa `IHealth`. Ojo: no apagar el objeto que tiene el `HealthBar` para ocultarlo
+     (se desuscribe en `OnDisable`): usar `CanvasGroup.alpha`.
+     Pendiente chico: en `HealthBar.Awake` el `GetComponent` está antes del guard de `_target` (NRE si falta).
+   - C (siguiente): contador de generadores (evento en `LevelExit`). D: flecha estilo *Crazy Taxi* al
+     generador vivo más cercano.
 3. **Centinela** (`Sentry : Enemy`): tanque quieto que gira hacia el player en rango y dispara con cooldown,
    usando un pool de balas propio; su bala no debe dañarlo a él ni a otros enemigos.
 4. Pendientes chicos: Charger (`Freeze Rotation Y` ya no aplica con NavMesh), `Canon` del Player con
