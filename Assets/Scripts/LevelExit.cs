@@ -1,18 +1,19 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class LevelExit : MonoBehaviour
 {
     
-    private bool _isOpen = false;
     [SerializeField] private GameObject _barriers;
     [SerializeField] private Generator[] _generators;
     [SerializeField] private string _victorySceneName = "Victory";
 
-
     private int _remaining;
     private int _total;
     private bool _levelCompleted;
+    private bool _isOpen = false;
+    public IReadOnlyList<Generator> Generators => _generators;
 
     public event System.Action<int, int> GeneratorsChanged;
 

@@ -49,7 +49,7 @@
   <div class="title">
     <h1>Interceptor<br>Zero</h1>
     <div class="sub">Trabajo práctico de medio término · Programación de Videojuegos 2</div>
-    <div class="meta">Marcos Vizio · 21 de octubre de 2026</div>
+    <div class="meta">Marcos Vizio · 21 de octubre de 2026 (actualizado el 23/10)</div>
   </div>
 </div>
 
@@ -79,10 +79,11 @@
   <li><strong>Escapar:</strong> al caer el tercer generador desaparece la barrera de la salida (arriba a la derecha). Al cruzarla se termina el nivel y aparece la pantalla de victoria.</li>
 </ol>
 <p><strong>Si el tanque es destruido</strong>, reaparece en el punto de inicio con la vida completa. Los generadores que ya destruiste siguen destruidos: el progreso no se pierde.</p>
+<p><strong>Interfaz:</strong> barra de vida del jugador (arriba a la izquierda), contador de generadores destruidos (arriba a la derecha, avisa cuando la salida se abre) y barras de vida flotando sobre cada enemigo y cada generador.</p>
 
 <div class="page-break"></div>
 <h2 style="margin-top:0">Enemigos: Charger (tanque de embestida)</h2>
-<p>Hay <strong>10 Chargers</strong> custodiando los generadores. Cada uno vigila un radio alrededor suyo: cuando el jugador entra en ese radio, gira hacia él y lo persigue; si lo toca, le hace daño por contacto mientras sigan en contacto. Si el jugador se aleja lo suficiente, el Charger se detiene. Son un poco más lentos que el jugador, así que se les puede escapar, y los árboles y edificios sirven de cobertura.</p>
+<p>Hay <strong>10 Chargers</strong> custodiando los generadores. Cada uno vigila un radio alrededor suyo: cuando el jugador entra en ese radio, lo persigue <strong>rodeando árboles y edificios</strong> (NavMesh); si lo toca, le hace daño por contacto mientras sigan en contacto. Si el jugador se aleja lo suficiente, el Charger se detiene. Son un poco más lentos que el jugador, así que se les puede escapar.</p>
 <table>
   <tr><th></th><th>Vida</th><th>Detalles</th></tr>
   <tr><td>Jugador</td><td>100</td><td>Velocidad 5 · dispara proyectiles de 20 de daño</td></tr>
@@ -113,6 +114,7 @@
   <tr><td>✔</td><td><strong>Lugar de inicio</strong> donde aparece el jugador.</td></tr>
   <tr><td>✔</td><td><strong>Fin del nivel:</strong> al cruzar la salida aparece la pantalla de victoria.</td></tr>
   <tr><td>✔</td><td><strong>Reaparición:</strong> al morir, el tanque vuelve al punto de inicio.</td></tr>
+  <tr><td>★</td><td><strong>Punto extra — Object Pooling:</strong> los misiles se reutilizan desde un pool (<code>BulletPool</code>) en lugar de crearse y destruirse en cada disparo.</td></tr>
 </table>
 
 <div class="page-break"></div>
@@ -130,17 +132,18 @@
   <div>
     <h3>Scripts principales</h3>
     <ul>
-      <li><code>Character</code> (abstracta): vida, daño y muerte. De ella heredan <code>PlayerController</code> y <code>Enemy</code> → <code>Charger</code>.</li>
+      <li><code>Character</code> (abstracta): vida, daño y muerte. De ella heredan <code>PlayerController</code> y <code>Enemy</code> → <code>Charger</code> (persigue con <code>NavMeshAgent</code>).</li>
       <li><code>IDamagable</code>: interfaz de todo lo que recibe daño (personajes y <code>Generator</code>).</li>
       <li><code>Generator</code> avisa con un evento al destruirse; <code>LevelExit</code> los cuenta y abre la salida (patrón Observer).</li>
-      <li><code>BulletController</code> + <code>BulletData</code> (ScriptableObject): proyectiles.</li>
+      <li><code>BulletController</code> + <code>BulletData</code> (ScriptableObject) + <code>BulletPool</code> (Object Pooling): proyectiles.</li>
+      <li><code>IHealth</code> + <code>HealthBar</code> + <code>BillBoard</code>: barras de vida reutilizables (HUD y sobre enemigos), actualizadas por evento; <code>GeneratorCounterUI</code>: contador.</li>
       <li><code>CameraFollow</code>, <code>SceneLoader</code>: cámara y cambio de escenas.</li>
     </ul>
   </div>
 </div>
 
 <h3>Assets utilizados</h3>
-<p class="small">Unity Asset Store: <em>Simple Nature Pack</em> (árboles, rocas, suelo), <em>RPG/FPS Game Assets – Industrial</em> (edificios, hangares, contenedores, vallas, barriles, caminos, generadores), <em>WZ PAK</em> (modelos de vehículos blindados del jugador y los enemigos), <em>BTM Rockets, Missiles &amp; Bombs</em> (proyectil) y <em>PBS Materials Variety Pack</em> (un material). Los fondos del menú y de la pantalla de victoria fueron generados por código.</p>
+<p class="small">Unity Asset Store: <em>Simple Nature Pack</em> (árboles, rocas, suelo), <em>RPG/FPS Game Assets – Industrial</em> (edificios, hangares, contenedores, vallas, barriles, caminos, generadores), <em>WZ PAK</em> (modelos de vehículos blindados del jugador y los enemigos), <em>BTM Rockets, Missiles &amp; Bombs</em> (proyectil), <em>RPG Poly Pack – Lite</em> (textura del pasto) y <em>PBS Materials Variety Pack</em> (un material). Los fondos del menú y de la pantalla de victoria fueron generados por código.</p>
 
 </body>
 </html>
