@@ -1,8 +1,10 @@
 # CLAUDE.md — Interceptor Zero
 
 Juego top-down de tanques hecho por Marcos Vizio para **Programación de Videojuegos 2**.
-**Entregado el 2026-10-21** (itch.io: https://marcosvizio.itch.io/interceptor-zero). Ahora el proyecto se usa
-**para estudiar**: cada mejora es una excusa para aprender un concepto nuevo.
+**Entregado el 2026-10-21** (itch.io: https://marcosvizio.itch.io/interceptor-zero), reentregado con pooling,
+NavMesh y UI A–C. **Proyecto TERMINADO (2026-10-25), por el momento**: Marcos pasó al TP 2 (grupal, otro repo).
+Si se retoma, seguir el roadmap de estudio de abajo desde UI parte D. Portadas en `Docs/Portada/`
+(`portada_itch.png` 1260×1000, `portada_cv.png` 1920×1080; fuentes `.html` → Edge headless `--screenshot`).
 Historial día por día y detalles de la entrega: `Docs/HISTORIAL.md` (leerlo solo si hace falta).
 
 - Unity **6000.3.15f1**, URP (proyecto **3D**), C#, VS Code + Claude Code, Windows.
@@ -59,7 +61,8 @@ una referencia del Inspector.
 ## Git
 Repo https://github.com/marcosvizio/Interceptor_Zero (LFS). `dev` = trabajo diario; `prod` = versión
 publicada en itch.io; `main` = igual a `prod`. Experimentos en ramas propias desde `dev` (ej. `navmesh`).
-Detalles y comandos: skill `git-flujo`. `prod`/`main` están en la entrega (`15da048`); `dev` tiene NavMesh.
+Detalles y comandos: skill `git-flujo`. Al cerrar el proyecto (2026-10-25) `dev`, `prod`, `main` y `ui` quedaron
+en el mismo commit (= reentrega publicada).
 
 ## Roadmap de estudio (en orden)
 1. ✅ **Object Pooling de balas** (2026-10-22, rama `pooling`): `BulletPool` (Queue, prewarm 20, crece si
@@ -78,8 +81,8 @@ Detalles y comandos: skill `git-flujo`. `prod`/`main` están en la entrega (`15d
    - ✅ C (2026-10-23): `LevelExit` cuenta `_total` (sin huecos null) y publica `GeneratorsChanged(destruidos, total)`
      en `Start` y al destruir uno; `GeneratorCounterUI` (TMP en el HUD, arriba a la derecha) se suscribe en `OnEnable`
      y muestra "Generadores: x/3" o "¡Salida abierta!". Cadena de eventos Generator → LevelExit → UI.
-   - D (siguiente): flecha 3D estilo *Crazy Taxi* sobre el tanque que apunta al
-     generador vivo más cercano.
+   - D (pendiente, si se retoma): flecha 3D estilo *Crazy Taxi* sobre el tanque que apunta al
+     generador vivo más cercano. Ya está hecha la propiedad `LevelExit.Generators` (`IReadOnlyList<Generator>`).
 3. **Centinela** (`Sentry : Enemy`): tanque quieto que gira hacia el player en rango y dispara con cooldown,
    usando un pool de balas propio; su bala no debe dañarlo a él ni a otros enemigos.
 4. Pendientes chicos: Charger (`Freeze Rotation Y` ya no aplica con NavMesh), `Canon` del Player con
